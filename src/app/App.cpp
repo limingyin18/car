@@ -4,8 +4,17 @@
 #include "glad/glad.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_opengl.h>
+
+void ProcessInput(SDL_Event event, Camera &camera);
+
+void App::Destroy()
+{
+    render_ = nullptr;
+    spdlog::debug("App Destroy");
+}
 
 void App::Init()
 {
@@ -65,6 +74,7 @@ void App::Run()
             // LOGI(event.type);
             // engine_->processInputEvent(event, engine_->input);
             // ImGui_ImplSDL3_ProcessEvent(&event);
+            ProcessInput(event, render_->camera_);
         }
         render_->Update();
         // update();
@@ -76,4 +86,64 @@ void App::Run()
         // PRESENT BACKBUFFER:
         SDL_GL_SwapWindow(window_.get());
     } while (event.type != SDL_QUIT);
+}
+
+void ProcessInput(SDL_Event event, Camera &camera)
+{
+    float speed = 0.05f;
+    switch (event.type)
+    {
+    case SDL_KEYDOWN:
+        spdlog::info("key down");
+        switch (event.key.keysym.sym)
+        {
+        case SDLK_w:
+            camera.MoveForward(1.0f * speed);
+            break;
+        case SDLK_s:
+            camera.MoveForward(-1.0f * speed);
+            break;
+        case SDLK_a:
+            camera.MoveRight(-1.0f * speed);
+            break;
+        case SDLK_d:
+            camera.MoveRight(1.0f * speed);
+            break;
+        case SDLK_q:
+            camera.MoveUp(1.0f * speed);
+            break;
+        case SDLK_e:
+            camera.MoveUp(-1.0f * speed);
+            break;
+        case SDLK_r:
+            camera.RotatePitch(1.0f * speed);
+            break;
+        case SDLK_c:
+            camera.RotatePitch(-1.0f * speed);
+            break;
+        case SDLK_z:
+            camera.RotateYaw(1.0f * speed);
+            break;
+        case SDLK_x:
+            camera.RotateYaw(-1.0f * speed);
+            break;
+        default:
+            break;
+        }
+        break;
+    case SDL_KEYUP:
+        spdlog::info("key up");
+        break;
+    case SDL_MOUSEMOTION:
+        spdlog::info("mouse motion");
+        break;
+    case SDL_MOUSEBUTTONDOWN:
+        spdlog::info("mouse button down");
+        break;
+    case SDL_MOUSEBUTTONUP:
+        spdlog::info("mouse button up");
+        break;
+    default:
+        break;
+    }
 }

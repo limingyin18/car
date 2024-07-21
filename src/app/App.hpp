@@ -20,14 +20,14 @@ public:
 
     void Init();
     void Run();
-    void Destroy() {};
+    void Destroy();
 
 private:
     void InitWSI();
+
     std::string title_ = "Car Display";
     uint32_t width_ = 1080;
     uint32_t height_ = 960;
     std::shared_ptr<SDL_Window> window_ = nullptr;
-
     std::shared_ptr<Render> render_ = nullptr;
 };
