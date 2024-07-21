@@ -60,7 +60,7 @@ float ShadowCalculation(vec3 fragPosWorldSpace)
     // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
     if (currentDepth > 1.0)
     {
-        return 0.0;
+        return 0.f;
     }
     // calculate bias (based on depth map resolution and slope)
     vec3 normal = normalize(fNormal);
@@ -111,5 +111,6 @@ void main()
     float shadow = ShadowCalculation(FragPos);    
     vec3 result = (ambient + (1-shadow)*(diffuse +specular)) * color;
     FragColor = vec4(result, 1.0);
+    // FragColor = vec4(vec3(shadow), 1.0);
     // FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 }

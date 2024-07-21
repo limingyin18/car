@@ -157,24 +157,31 @@ glm::mat4 ShadowMap::GetLightSpaceMatrix(const float nearPlane, const float farP
         maxZ = std::max(maxZ, trf.z);
     }
 
-    // Tune this parameter according to the scene
-    constexpr float zMult = 10.f;
-    if (minZ < 0)
-    {
-        minZ *= zMult;
-    }
-    else
-    {
-        minZ /= zMult;
-    }
-    if (maxZ < 0)
-    {
-        maxZ /= zMult;
-    }
-    else
-    {
-        maxZ *= zMult;
-    }
+    auto temp = -minZ;
+    minZ = -maxZ;
+    maxZ = temp;
+    auto mid = (maxZ - minZ) / 2;
+    minZ -= mid * 10.0f;
+    maxZ += mid * 10.0f;
+
+    // // Tune this parameter according to the scene
+    // constexpr float zMult = 10.f;
+    // if (minZ < 0)
+    // {
+    //     minZ *= zMult;
+    // }
+    // else
+    // {
+    //     minZ /= zMult;
+    // }
+    // if (maxZ < 0)
+    // {
+    //     maxZ /= zMult;
+    // }
+    // else
+    // {
+    //     maxZ *= zMult;
+    // }
 
     const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
     return lightProjection * lightView;
