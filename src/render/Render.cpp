@@ -10,6 +10,8 @@
 
 using namespace std;
 
+void renderQuad();
+
 Render::Render()
 {
     LoadShaders();
@@ -113,16 +115,17 @@ void Render::Init(uint32_t width, uint32_t height)
 
     CreateMultisampledFramebuffer();
     CreateShadowFramebuffer();
+    CreateGBuffer();
 
     LoadShaders();
-    // SetLightSpaceMatrix();
     sun_direction_ = glm::normalize(light_position_ - glm::vec3(0.0f, 0.0f, 0.0f));
+    sun_color_ = glm::vec3(1.0f, 1.0f, 1.0f);
     CreateDefaultTexture();
 
     LoadModel();
 
     glViewport(0, 0, width, height);
-    glClearColor(0.2f, 0.3f, 0.4f, 1.f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.f);
 
     camera_.SetWidth(width);
     camera_.SetHeight(height);
@@ -133,6 +136,32 @@ void Render::Init(uint32_t width, uint32_t height)
 
     shadow_map_ = make_shared<ShadowMap>();
     shadow_map_->Init(camera_, sun_direction_, shaders_map_["shadow"]);
+
+    ssao_ = make_shared<SSAO>();
+    ssao_->Init(shaders_map_["ssao"], shaders_map_["ssao_blur"], camera_);
+
+    shaders_map_["ssao_lighting"]->use();
+    shaders_map_["ssao_lighting"]->setVec3("lightColor", sun_color_);
+    shaders_map_["ssao_lighting"]->setFloat("far_plane", camera_.GetFar());
+    shaders_map_["ssao_lighting"]->setMat4("proj", camera_.GetProj());
+    shaders_map_["ssao_lighting"]->setMat4("width", camera_.GetWidth());
+    shaders_map_["ssao_lighting"]->setMat4("height", camera_.GetHeight());
+    auto kernel = ssao_->GetKernel();
+    for (unsigned int i = 0; i < 64; ++i)
+        shaders_map_["ssao_lighting"]->setVec3("samples[" + std::to_string(i) + "]", kernel[i]);
+
+    shaders_map_["gBuffer"]->use();
+    shaders_map_["gBuffer"]->setMat4("view", camera_.GetView());
+    shaders_map_["gBuffer"]->setMat4("projection", camera_.GetProj());
+
+    shaders_map_["ssao_geometry"]->use();
+    shaders_map_["ssao_geometry"]->setMat4("view", camera_.GetView());
+    shaders_map_["ssao_geometry"]->setMat4("projection", camera_.GetProj());
+
+    shaders_map_["deferred"]->use();
+    shaders_map_["deferred"]->setVec3("lightColor", glm::vec3{1.0f, 1.0f, 1.0f});
+    shaders_map_["deferred"]->setVec3("lightDir", sun_direction_);
+    shaders_map_["deferred"]->setVec3("viewPos", camera_.GetPosition());
 
     shaders_map_["basic"]->use();
     shaders_map_["basic"]->setMat4("view", camera_.GetView());
@@ -200,6 +229,9 @@ void Render::Init(uint32_t width, uint32_t height)
         auto &mesh = model_->GetMeshes();
         for (int i = 0; i < mesh.size(); i++)
         {
+            glm::mat4 model = mesh[i]->GetModel();
+            model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+            mesh[i]->SetModel(model);
             primitives_map_[model_primitive_ + i] = make_shared<Primitive>();
             auto primitive = primitives_map_[model_primitive_ + i];
             primitive->Init();
@@ -213,6 +245,38 @@ void Render::Update()
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera_.LookAt();
+
+    shaders_map_["ssao_geometry"]->use();
+    shaders_map_["ssao_geometry"]->setMat4("view", camera_.GetView());
+    DrawGBuffer();
+
+    glBindTextureUnit(0, gPosition_);
+    glBindTextureUnit(1, gNormal_);
+    ssao_->Use();
+    renderQuad();
+
+    ssao_->UseBlur();
+    renderQuad();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glBindTextureUnit(0, gPosition_);
+    glBindTextureUnit(1, gNormal_);
+    glBindTextureUnit(2, gAlbedoSpec_);
+    glBindTextureUnit(3, ssao_->GetBlurColorTexture());
+    glBindTextureUnit(4, ssao_->GetNoiseTexture());
+    shaders_map_["ssao_lighting"]->use();
+    glm::mat4 view = camera_.GetView();
+    glm::mat4 normal_matrix = transpose(inverse(glm::mat3(view)));
+    glm::vec4 sun_dir_4 = normal_matrix * glm::vec4(sun_direction_, 1.0);
+    glm::vec3 lightDirView = glm::normalize(glm::vec3(sun_dir_4));
+    shaders_map_["ssao_lighting"]->setVec3("lightDir", lightDirView);
+    shaders_map_["ssao_lighting"]->setMat4("view", view);
+    shaders_map_["ssao_lighting"]->setMat4("invView", glm::inverse(view));
+    renderQuad();
+
+    return;
+
     shaders_map_["basic"]->use();
     shaders_map_["basic"]->setMat4("view", camera_.GetView());
 
@@ -269,4 +333,62 @@ void Render::SetLightSpaceMatrix()
     shaders_map_["shadow"]->setMat4("lightSpaceMatrix", lightSpaceMatrix_);
     shaders_map_["phong"]->use();
     shaders_map_["phong"]->setMat4("lightSpaceMatrix", lightSpaceMatrix_);
+}
+
+void Render::DrawGBuffer()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO_);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for (auto &primitive : primitives_map_)
+    {
+        primitive.second->Draw(shaders_map_["ssao_geometry"]);
+    }
+}
+
+// renderQuad() renders a 1x1 XY quad in NDC
+// -----------------------------------------
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            -1.0f,
+            -1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            -1.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }

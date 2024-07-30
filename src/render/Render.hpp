@@ -2,12 +2,14 @@
 
 #include <string>
 #include <unordered_map>
+#include <array>
 
 #include "Primitive/Cube.hpp"
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include "assimp/Model.hpp"
 #include "ShadowMap.hpp"
+#include "SSAO.hpp"
 
 class Render
 {
@@ -25,7 +27,10 @@ private:
     void CreateDefaultTexture();
     void CreateMultisampledFramebuffer();
     void CreateShadowFramebuffer();
+    void CreateGBuffer();
     void SetLightSpaceMatrix();
+
+    void DrawGBuffer();
 
     std::unordered_map<std::string, uint32_t> textures_map_;
     std::unordered_map<uint32_t, std::shared_ptr<Primitive>> primitives_map_;
@@ -39,6 +44,7 @@ private:
 
     glm::vec3 light_position_ = glm::vec3(1.0f, 15.0f, 0.0f);
     glm::vec3 sun_direction_;
+    glm::vec3 sun_color_;
 
     uint32_t width_ = -1, height_ = -1;
     uint32_t sample_count_ = 16;
@@ -53,4 +59,12 @@ private:
     glm::mat4 lightSpaceMatrix_;
 
     std::shared_ptr<ShadowMap> shadow_map_;
+
+    std::thread compute_thread_;
+
+    uint32_t gBufferFBO_ = -1;
+    uint32_t gPosition_ = -1, gNormal_ = -1, gAlbedoSpec_ = -1;
+    uint32_t gDepth_ = -1;
+
+    std::shared_ptr<SSAO> ssao_;
 };

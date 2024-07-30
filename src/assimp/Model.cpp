@@ -51,7 +51,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(processMesh(mesh, scene));
 
-        meshes.back()->SetModelMatrix(model_matrix);
+        meshes.back()->SetModel(model_matrix);
         meshes.back()->SetName(node->mName.C_Str());
     }
 

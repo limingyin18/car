@@ -90,7 +90,7 @@ void App::Run()
 
 void ProcessInput(SDL_Event event, Camera &camera)
 {
-    float speed = 0.05f;
+    float speed = 0.5f;
     switch (event.type)
     {
     case SDL_KEYDOWN:

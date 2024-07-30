@@ -33,7 +33,6 @@ public:
               const std::vector<Texture> &_textures);
     void SetModel(const glm::mat4 &model) { model_ = model; }
     glm::mat4 &GetModel() { return model_; }
-    void SetModelMatrix(const glm::mat4 &model) { model_ = model; }
     void SetName(const std::string &name) { name_ = name; }
 
     std::vector<Texture> &GetTextures() { return textures_; }

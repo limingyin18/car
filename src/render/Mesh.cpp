@@ -9,7 +9,7 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &vbo_);
     glDeleteBuffers(1, &ebo_);
     glDeleteVertexArrays(1, &vao_);
-    spdlog::info("Mesh {} deleted", name_);
+    // spdlog::info("Mesh {} deleted", name_);
 }
 
 void Mesh::Init(const std::vector<Vertex> &_vertices,
