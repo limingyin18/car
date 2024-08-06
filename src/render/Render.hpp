@@ -42,7 +42,7 @@ private:
 
     std::shared_ptr<Model> model_;
 
-    glm::vec3 light_position_ = glm::vec3(1.0f, 15.0f, 0.0f);
+    glm::vec3 light_position_ = glm::vec3(10.0f, 15.0f, 10.0f);
     glm::vec3 sun_direction_;
     glm::vec3 sun_color_;
 
@@ -67,4 +67,6 @@ private:
     uint32_t gDepth_ = -1;
 
     std::shared_ptr<SSAO> ssao_;
+
+    uint32_t 
 };

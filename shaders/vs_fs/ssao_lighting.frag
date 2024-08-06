@@ -101,8 +101,9 @@ vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv)
 {
     vec3 albedo  = GetGBufferDiffuse(uv);
     vec3 normal = GetGBufferNormalWorld(uv);
-    float cos = max(0., dot(normal, wi));
-    return albedo * cos;
+    float cos_test = max(0., dot(normal, wi));
+    // return albedo * cos;
+    return albedo * cos_test;
 }
 
 bool RayMarch(vec3 FragPos, vec3 reflectDir, out vec3 hitPos, out vec2 uv)
@@ -113,7 +114,9 @@ bool RayMarch(vec3 FragPos, vec3 reflectDir, out vec3 hitPos, out vec2 uv)
     {
         float delta = i * step1;
         vec3 sample1 = FragPos + reflectDir * delta;
-        float sampleDepth = -sample1.z;
+        // float sampleDepth = -sample1.z;
+        vec4 sample1_view = view*vec4(sample1, 1.0);
+        float sampleDepth = -sample1_view.z/sample1_view.w;
 
         vec4 tmp = proj * view*vec4(sample1, 1.0);
         vec3 projCoords = tmp.xyz / tmp.w;
@@ -149,22 +152,33 @@ void main()
     vec3 wo = normalize(mat3(invView)*viewDir);
 
     vec3 L_ind = vec3(0.0);
+    bool is_hit = false;
+
+    vec3 dir = vec3(0.0);
     for(int i = 0; i < 4; i++)
     {
         float pdf; 
         vec3 localDir = SampleHemisphereCos(s, pdf);
-        vec3 dir = normalize(mat3(b1, b2, normal) * localDir);
+        dir = normalize(mat3(b1, b2, normal) * localDir);
         vec3 position_1;
         vec2 uv;
         if(RayMarch(worldPos, dir, position_1, uv))
         {
             L_ind += EvalDiffuse(dir, wo, TexCoords) / pdf * EvalDiffuse(wi, dir, uv);
-            // L_ind += EvalDiffuse(dir, wo, TexCoords);
-            // L_ind += vec3(1.0);
+            // L_ind += EvalDiffuse(wi, dir, uv);
+            is_hit = true;
+            // vec3 albedo = texture(gAlbedo, uv).xyz;
+            // vec3 normal_test = GetGBufferNormalWorld(uv);
+            // float cos_test = max(0., dot(normal, wi));
+            // vec3 test_color =  albedo * cos_test;
+            // L_ind += EvalDiffuse(wi, dir, uv);
+            // L_ind = wi;
+            // break;
         }
     }
 
     L_ind /= float(4);
+    // L_ind = normal;
 
     vec3 Diffuse = texture(gAlbedo, TexCoords).rgb;
 
@@ -194,6 +208,12 @@ void main()
     // FragColor = vec4(is_hit, 1.0);
 
     vec3 L = lighting+L_ind;
+    // vec3 L = L_ind;
+    if(is_hit)
+    {
+        L /= 2.0;
+    }
+
     // vec3 L = L_ind;
     // vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
     FragColor = vec4(L, 1.0);
