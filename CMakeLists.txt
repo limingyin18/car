@@ -7,9 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "Debug")
-#set(CMAKE_C_COMPILER "clang-cl")
-#set(CMAKE_CXX_COMPILER "clang-cl")
+set(CMAKE_C_COMPILER "clang")
+set(CMAKE_CXX_COMPILER "clang")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/")
+
+# set(CMAKE_C_FLAGS "-target x86_64-pc-windows-gnu")
+# set(CMAKE_CXX_FLAGS "-target x86_64-pc-windows-gnu")
 
 
 # add_subdirectory("third_party/glm-1.0.1")

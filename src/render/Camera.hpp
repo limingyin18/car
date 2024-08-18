@@ -69,7 +69,7 @@ private:
 
     float fov_ = 45.f;
     float width_ = 1080, height_ = 960;
-    float near_ = 0.1f, far_ = 500.f;
+    float near_ = 0.1f, far_ = 10.f;
 
     glm::mat4 view_{1.0f};
     glm::mat4 proj_{1.0f};

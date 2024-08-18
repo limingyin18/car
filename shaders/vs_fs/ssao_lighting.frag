@@ -123,6 +123,7 @@ bool RayMarch(vec3 FragPos, vec3 reflectDir, out vec3 hitPos, out vec2 uv)
         uv = projCoords.xy * 0.5 + 0.5;
 
         float sceneDepth = -texture(gPosition, uv).z;
+
         if(sampleDepth - sceneDepth > 0.0001)
         {
             hitPos = sample1;

@@ -47,7 +47,7 @@ void Render::CreateGBuffer()
 
     // - position color buffer
     glCreateTextures(GL_TEXTURE_2D, 1, &gPosition_);
-    glTextureStorage2D(gPosition_, 1, GL_RGBA16F, width_, height_);
+    glTextureStorage2D(gPosition_, 1, GL_RGBA32F, width_, height_);
     glTextureParameteri(gPosition_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(gPosition_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(gPosition_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -56,14 +56,14 @@ void Render::CreateGBuffer()
 
     // - normal color buffer
     glCreateTextures(GL_TEXTURE_2D, 1, &gNormal_);
-    glTextureStorage2D(gNormal_, 1, GL_RGBA16F, width_, height_);
+    glTextureStorage2D(gNormal_, 1, GL_RGBA32F, width_, height_);
     glTextureParameteri(gNormal_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(gNormal_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glNamedFramebufferTexture(gBufferFBO_, GL_COLOR_ATTACHMENT1, gNormal_, 0);
 
     // - color + specular color buffer
     glCreateTextures(GL_TEXTURE_2D, 1, &gAlbedoSpec_);
-    glTextureStorage2D(gAlbedoSpec_, 1, GL_RGBA16F, width_, height_);
+    glTextureStorage2D(gAlbedoSpec_, 1, GL_RGBA32F, width_, height_);
     glTextureParameteri(gAlbedoSpec_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(gAlbedoSpec_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glNamedFramebufferTexture(gBufferFBO_, GL_COLOR_ATTACHMENT2, gAlbedoSpec_, 0);
@@ -74,17 +74,56 @@ void Render::CreateGBuffer()
 
     // depth
     glCreateTextures(GL_TEXTURE_2D, 1, &gDepth_);
-    glTextureStorage2D(gDepth_, 1, GL_DEPTH_COMPONENT32, width_, height_);
+    int numLevels = 1 + (int)floorf(log2f(fmaxf(width_, height_)));
+    glTextureStorage2D(gDepth_, numLevels, GL_DEPTH_COMPONENT32, width_, height_);
     glTextureParameteri(gDepth_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(gDepth_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(gDepth_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTextureParameteri(gDepth_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(gDepth_, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    // glTextureParameteri(gDepth_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    // glTextureParameteri(gDepth_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTextureParameteri(gDepth_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(gDepth_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
     GLfloat borderColor[] = {1.0, 1.0, 1.0, 1.0};
     glTextureParameterfv(gDepth_, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glGenerateTextureMipmap(gDepth_);
 
     glNamedFramebufferTexture(gBufferFBO_, GL_DEPTH_ATTACHMENT, gDepth_, 0);
 
     GLenum status = glCheckNamedFramebufferStatus(gBufferFBO_, GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        spdlog::error(status);
+        throw runtime_error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+    }
+}
+
+void Render::CreateTestFramebuffer()
+{
+    glCreateFramebuffers(1, &test_fbo_);
+    // - position color buffer
+    glCreateTextures(GL_TEXTURE_2D, 1, &test_color_texture);
+    glTextureStorage2D(test_color_texture, 1, GL_RGBA32F, width_, height_);
+    glTextureParameteri(test_color_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(test_color_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(test_color_texture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(test_color_texture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glNamedFramebufferTexture(test_fbo_, GL_COLOR_ATTACHMENT0, test_color_texture, 0);
+
+    std::array<uint32_t, 1> attachments{GL_COLOR_ATTACHMENT0};
+
+    glNamedFramebufferDrawBuffers(test_fbo_, attachments.size(), attachments.data());
+
+    // depth
+    glCreateTextures(GL_TEXTURE_2D, 1, &test_dpeth_texture_);
+    glTextureStorage2D(test_dpeth_texture_, 1, GL_DEPTH_COMPONENT32, width_, height_);
+    glTextureParameteri(test_dpeth_texture_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(test_dpeth_texture_, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTextureParameteri(test_dpeth_texture_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(test_dpeth_texture_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glNamedFramebufferTexture(test_fbo_, GL_DEPTH_ATTACHMENT, test_dpeth_texture_, 0);
+
+    GLenum status = glCheckNamedFramebufferStatus(test_fbo_, GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
     {
         spdlog::error(status);

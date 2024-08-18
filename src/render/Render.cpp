@@ -116,6 +116,7 @@ void Render::Init(uint32_t width, uint32_t height)
     CreateMultisampledFramebuffer();
     CreateShadowFramebuffer();
     CreateGBuffer();
+    CreateTestFramebuffer();
 
     LoadShaders();
     sun_direction_ = glm::normalize(light_position_ - glm::vec3(0.0f, 0.0f, 0.0f));
@@ -149,6 +150,10 @@ void Render::Init(uint32_t width, uint32_t height)
     auto kernel = ssao_->GetKernel();
     for (unsigned int i = 0; i < 64; ++i)
         shaders_map_["ssao_lighting"]->setVec3("samples[" + std::to_string(i) + "]", kernel[i]);
+
+    shaders_map_["ssgi"]->use();
+    shaders_map_["ssgi"]->setMat4("proj", camera_.GetProj());
+    shaders_map_["ssgi"]->setVec3("lightColor", sun_color_);
 
     shaders_map_["gBuffer"]->use();
     shaders_map_["gBuffer"]->setMat4("view", camera_.GetView());
@@ -242,6 +247,7 @@ void Render::Init(uint32_t width, uint32_t height)
 
 void Render::Update()
 {
+    glDisable(GL_FRAMEBUFFER_SRGB);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera_.LookAt();
@@ -249,30 +255,35 @@ void Render::Update()
     shaders_map_["ssao_geometry"]->use();
     shaders_map_["ssao_geometry"]->setMat4("view", camera_.GetView());
     DrawGBuffer();
+    DrawDepthMipmap();
 
     glBindTextureUnit(0, gPosition_);
     glBindTextureUnit(1, gNormal_);
-    ssao_->Use();
-    renderQuad();
+    // ssao_->Use();
+    // renderQuad();
 
-    ssao_->UseBlur();
-    renderQuad();
+    // ssao_->UseBlur();
+    // renderQuad();
 
+    // glBindFramebuffer(GL_FRAMEBUFFER, test_fbo_);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindTextureUnit(0, gPosition_);
     glBindTextureUnit(1, gNormal_);
     glBindTextureUnit(2, gAlbedoSpec_);
     glBindTextureUnit(3, ssao_->GetBlurColorTexture());
-    glBindTextureUnit(4, ssao_->GetNoiseTexture());
-    shaders_map_["ssao_lighting"]->use();
+    glBindTextureUnit(4, gDepth_);
+    shaders_map_["ssgi"]->use();
     glm::mat4 view = camera_.GetView();
     glm::mat4 normal_matrix = transpose(inverse(glm::mat3(view)));
     glm::vec4 sun_dir_4 = normal_matrix * glm::vec4(sun_direction_, 1.0);
     glm::vec3 lightDirView = glm::normalize(glm::vec3(sun_dir_4));
-    shaders_map_["ssao_lighting"]->setVec3("lightDir", lightDirView);
-    shaders_map_["ssao_lighting"]->setMat4("view", view);
-    shaders_map_["ssao_lighting"]->setMat4("invView", glm::inverse(view));
+    shaders_map_["ssgi"]->setVec3("lightDir", lightDirView);
+    shaders_map_["ssgi"]->setMat4("view", view);
+    shaders_map_["ssgi"]->setMat4("invView", glm::inverse(view));
+
+    int numLevels = 1 + (int)floorf(log2f(fmaxf(width_, height_)));
+    shaders_map_["ssgi"]->setInt("maxLevel", numLevels - 1);
     renderQuad();
 
     return;
@@ -391,4 +402,38 @@ void renderQuad()
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+}
+
+void Render::DrawDepthMipmap()
+{
+    shaders_map_["depth_mipmap"]->use();
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gDepth_);
+    glDepthFunc(GL_ALWAYS);
+    // calculate the number of mipmap levels for NPOT texture
+    int numLevels = 1 + (int)floorf(log2f(fmaxf(width_, height_)));
+    int currentWidth = width_;
+    int currentHeight = height_;
+    for (int i = 1; i < numLevels; i++)
+    {
+        glUniform2i(glGetUniformLocation(shaders_map_["depth_mipmap"]->ID, "u_previousLevelDimensions"), currentWidth, currentHeight);
+        shaders_map_["depth_mipmap"]->setInt("u_previousLevel", i - 1);
+        // calculate next viewport size
+        currentWidth /= 2;
+        currentHeight /= 2;
+        // ensure that the viewport size is always at least 1x1
+        currentWidth = currentWidth > 0 ? currentWidth : 1;
+        currentHeight = currentHeight > 0 ? currentHeight : 1;
+        glViewport(0, 0, currentWidth, currentHeight);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth_, i);
+        // dummy draw command as the full screen quad is generated completely by a geometry shader
+        renderQuad();
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, numLevels - 1);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthFunc(GL_LESS);
+    glViewport(0, 0, width_, height_);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gDepth_, 0);
 }
