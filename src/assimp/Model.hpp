@@ -1,23 +1,44 @@
 #pragma once
 
-#include "render/Mesh.hpp"
+#include "IModel.hpp"
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-class Model
+class Vertex;
+class Texture;
+class aiMesh;
+class aiNode;
+class aiMaterial;
+namespace Assimp
 {
-public:
-    Model() = default;
-    ~Model();
-    void Load(const std::string &path);
-    std::vector<std::shared_ptr<Mesh>> &GetMeshes() { return meshes; };
+class Importer;
+};
 
-private:
-    std::vector<std::shared_ptr<Mesh>> meshes;
-    std::string directory;
+class Model : public IModel
+{
+  public:
+    Model();
+    virtual ~Model();
+
+    void Load(const std::string &_path) override;
+    [[nodiscard]] std::vector<std::shared_ptr<IMesh>> &GetMeshes() override
+    {
+        return meshes_;
+    };
+
+    [[nodiscard]] std::string GetDirectory() const
+    {
+        return directory_;
+    };
+    [[nodiscard]] const aiScene *GetScene() const override;
+
+  protected:
+    virtual std::shared_ptr<IMesh> processMesh(aiMesh *mesh, const aiScene *scene);
     void processNode(aiNode *node, const aiScene *scene);
-    virtual std::shared_ptr<Mesh> processMesh(aiMesh *mesh, const aiScene *scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
+
+    std::unique_ptr<Assimp::Importer> importer;
+    std::vector<std::shared_ptr<IMesh>> meshes_;
+    std::string directory_;
+    void ProcessVertex(aiMesh *mesh, uint32_t index, Vertex &vertex);
 };

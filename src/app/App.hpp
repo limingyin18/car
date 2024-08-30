@@ -5,6 +5,7 @@
 
 class SDL_Window;
 class Render;
+class Game;
 
 class App
 {
@@ -25,9 +26,10 @@ public:
 private:
     void InitWSI();
 
-    std::string title_ = "Car Display";
-    uint32_t width_ = 1080;
+    std::string title_ = "Borrow The East Wind";
+    uint32_t width_ = 1280;
     uint32_t height_ = 960;
     std::shared_ptr<SDL_Window> window_ = nullptr;
     std::shared_ptr<Render> render_ = nullptr;
+    std::shared_ptr<Game> game_ = nullptr;
 };

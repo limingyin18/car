@@ -16,8 +16,6 @@ int main(int argc, char** argv)
 
     try
     {
-        std::cout << "Hello World!" << std::endl;
-
         App app;
 
         app.Init();
@@ -28,7 +26,7 @@ int main(int argc, char** argv)
     }
     catch (const exception& e)
     {
-        cout << e.what() << endl;
+        spdlog::error(e.what());
         return EXIT_FAILURE;
     }
 

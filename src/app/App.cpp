@@ -1,14 +1,17 @@
 #include "App.hpp"
+#include "SDL_keycode.h"
+#include "game/Game.hpp"
 #include "render/Render.hpp"
 
 #include "glad/glad.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
-#include <SDL2/SDL_video.h>
 #include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_video.h>
+#include <memory>
 
-void ProcessInput(SDL_Event event, Camera &camera);
+void ProcessInput(SDL_Event event, Camera &camera, std::shared_ptr<Game> game);
 
 void App::Destroy()
 {
@@ -22,6 +25,9 @@ void App::Init()
 
     render_ = std::make_shared<Render>();
     render_->Init(width_, height_);
+
+    game_ = std::make_shared<Game>();
+    game_->Init(render_);
 }
 
 void App::InitWSI()
@@ -77,11 +83,13 @@ void App::Run()
             // LOGI(event.type);
             // engine_->processInputEvent(event, engine_->input);
             // ImGui_ImplSDL3_ProcessEvent(&event);
-            ProcessInput(event, render_->camera_);
+            ProcessInput(event, render_->camera_, game_);
         }
-        render_->Update();
+        game_->Update();
+        render_->Draw(game_->GetPrimitives());
         // update();
-        // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+        // auto duration =
+        // std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
         // LOGI("duration: {}", duration.count());
         // if (engine_->input.keys["esc"])
         //    break;
@@ -91,13 +99,13 @@ void App::Run()
     } while (event.type != SDL_QUIT);
 }
 
-void ProcessInput(SDL_Event event, Camera &camera)
+void ProcessInput(SDL_Event event, Camera &camera, std::shared_ptr<Game> game)
 {
     float speed = 0.5f;
     switch (event.type)
     {
     case SDL_KEYDOWN:
-        spdlog::info("key down");
+        // spdlog::info("key down");
         switch (event.key.keysym.sym)
         {
         case SDLK_w:
@@ -130,21 +138,29 @@ void ProcessInput(SDL_Event event, Camera &camera)
         case SDLK_x:
             camera.RotateYaw(-1.0f * speed);
             break;
+        case SDLK_f:
+            game->SwitchFoxAnimation();
+            break;
+        case SDLK_ESCAPE:
+            SDL_Event quit_event;
+            quit_event.type = SDL_QUIT;
+            SDL_PushEvent(&quit_event);
+            break;
         default:
             break;
         }
         break;
     case SDL_KEYUP:
-        spdlog::info("key up");
+        // spdlog::info("key up");
         break;
     case SDL_MOUSEMOTION:
-        spdlog::info("mouse motion");
+        // spdlog::info("mouse motion");
         break;
     case SDL_MOUSEBUTTONDOWN:
-        spdlog::info("mouse button down");
+        // spdlog::info("mouse button down");
         break;
     case SDL_MOUSEBUTTONUP:
-        spdlog::info("mouse button up");
+        // spdlog::info("mouse button up");
         break;
     default:
         break;

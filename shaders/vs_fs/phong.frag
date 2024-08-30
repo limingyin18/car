@@ -1,14 +1,21 @@
 #version 460 core
 
-uniform vec3 lightColor;
-// uniform vec3 lightPos;
-uniform vec3 lightDir;
-uniform vec3 viewPos;
+
+layout(std140, binding = 0) uniform Camera 
+{
+    mat4 projection;
+    mat4 view;
+    vec3 viewPos;
+};
+
+layout(std140, binding = 1) uniform Enviroment 
+{
+    vec3 lightColor;
+    vec3 lightDir;
+};
+
 uniform float farPlane;
 
-uniform mat4 view;
-
-in vec3 fColor;
 in vec3 fNormal;
 in vec2 TexCoord;
 
@@ -19,7 +26,7 @@ out vec4 FragColor;
 float specularStrength = 0.5;
 
 layout(location = 0) uniform sampler2D ambientTexture;
-uniform sampler2DArray shadowMap;
+layout(location = 1)uniform sampler2DArray shadowMap;
 
 layout (std140) uniform LightSpaceMatrices
 {
@@ -98,7 +105,6 @@ void main()
     vec3 ambient = ambientStrength * lightColor;
 
     vec3 norm = normalize(fNormal);
-    // vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
@@ -109,8 +115,6 @@ void main()
 
     vec3 color = texture(ambientTexture, TexCoord).rgb;
     float shadow = ShadowCalculation(FragPos);    
-    vec3 result = (ambient + (1-shadow)*(diffuse +specular)) * color;
+    vec3 result = (ambient + (diffuse +specular)) * color;
     FragColor = vec4(result, 1.0);
-    // FragColor = vec4(vec3(shadow), 1.0);
-    // FragColor = vec4(0.5, 0.5, 0.5, 1.0);
 }

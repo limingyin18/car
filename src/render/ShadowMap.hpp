@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "Camera.hpp"
-#include "Shader.hpp"
+#include "Shader/Shader.hpp"
 
 class ShadowMap
 {

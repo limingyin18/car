@@ -1,0 +1,82 @@
+#pragma once
+
+#include "IActor.hpp"
+
+#include <glm/glm.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <spdlog/spdlog.h>
+
+class IModel;
+class IMesh;
+class Shader;
+class Primitive;
+
+class Actor : public IActor
+{
+  public:
+    Actor();
+    virtual ~Actor();
+    void Init() override;
+    void Update() override {};
+    void Destroy() override {};
+
+    void SetModelPath(const std::string &model_path)
+    {
+        model_path_ = model_path;
+    };
+    [[nodiscard]] std::string GetModelPath() const
+    {
+        return model_path_;
+    };
+    void SetShader(const std::shared_ptr<Shader> &shader)
+    {
+        shader_ = shader;
+    };
+    [[nodiscard]] std::shared_ptr<Shader> GetShader() const
+    {
+        return shader_;
+    };
+    void SetTransform(const glm::mat4 &transform)
+    {
+        transform_ = transform;
+    };
+    [[nodiscard]] glm::mat4 GetTransform() const
+    {
+        return transform_;
+    };
+
+    std::vector<std::shared_ptr<Primitive>> &GetPrimitives()
+    {
+        return primitives_;
+    }
+
+    void AddMesh(const std::shared_ptr<IMesh> &mesh)
+    {
+        meshes_.push_back(mesh);
+    }
+    void SetMeshes(const std::vector<std::shared_ptr<IMesh>> &meshes)
+    {
+        meshes_ = meshes;
+    }
+    [[nodiscard]] std::vector<std::shared_ptr<IMesh>> GetMeshes() const
+    {
+        return meshes_;
+    }
+
+  protected:
+    virtual void CreatePrimitives();
+
+    std::string model_path_ = "";
+    std::shared_ptr<IModel> model_ = nullptr;
+
+    std::vector<std::shared_ptr<IMesh>> meshes_;
+    std::shared_ptr<Shader> shader_ = nullptr;
+
+    glm::mat4 transform_{1.0f};
+
+    std::vector<std::shared_ptr<Primitive>> primitives_;
+};

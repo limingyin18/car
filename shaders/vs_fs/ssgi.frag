@@ -135,10 +135,10 @@ bool crossedCellBoundary(vec2 oldCellIdx,vec2 newCellIdx){
     return (oldCellIdx.x!=newCellIdx.x)||(oldCellIdx.y!=newCellIdx.y);
 }
 
-vec3 FindIntersection(vec3 start,vec3 rayDir,float maxTraceDistance, vec3 hitPos){
+bool FindIntersection(vec3 start,vec3 rayDir,float maxTraceDistance, out vec3 hitPos){
 
     vec2 crossStep = vec2(rayDir.x>=0?1:-1,rayDir.y>=0?1:-1);
-    vec2 crossOffset = crossStep / vec2(1024.0,1024.0) / 128;
+    vec2 crossOffset = crossStep / vec2(1280.0,960.0) / 128;
     crossStep = clamp(crossStep,0.0,1.0);
 
     vec3 ray = start;
@@ -175,16 +175,17 @@ vec3 FindIntersection(vec3 start,vec3 rayDir,float maxTraceDistance, vec3 hitPos
 
         float thickness = level ==0 ? (ray.z-cell_minZ) : 0;
         bool crossed  = (isBackwardRay&&(cell_minZ>ray.z))||(thickness>MAX_THICKNESS)|| crossedCellBoundary(oldCellIdx, newCellIdx);
-        // return vec3(isBackwardRay&&(cell_minZ>ray.z));
+        hitPos =  vec3(rayDir.z);
 
         ray = crossed ? intersectCellBoundary(o, d, oldCellIdx, cellCount, crossStep, crossOffset):tmpRay;
         level = crossed ? min(maxLevel,level+1):level-1;
         ++iter;
     }
     bool intersected = (level < stopLevel);
-    hitPos = ray;
+    // hitPos = vec3(maxZ*Dir);
 	
-    return intersected ? texture(gAlbedo,hitPos.xy).rgb:vec3(0.0);
+    // return intersected ? texture(gAlbedo,hitPos.xy).rgb:vec3(0.0);
+    return intersected;
     // return intersected ? vec3(1.0):vec3(0.0);
     // return intersected ? vec3(level):vec3(0.0);
 }
@@ -313,38 +314,44 @@ bool RayMarch_Hiz(vec3 ori, vec3 dir, out vec3 hitPos, out vec2 uv){
 void main()
 {             
     // retrieve data from gbuffer
-    vec3 FragPos = texture(gPosition, TexCoords).rgb;
+    vec3 positionInView = texture(gPosition,TexCoords).rgb;
+    vec3 normalInView = texture(gNormal,TexCoords).rgb;
+    vec3 relfectDir = normalize(reflect(normalize(positionInView),normalInView));
     vec3 Normal = texture(gNormal, TexCoords).rgb;
 
-    vec3 viewDir  = normalize(-FragPos); // viewpos is (0.0.0)
 
-    vec3 normal = mat3(invView)*Normal;
-    vec4 worldPos_4 = (invView)*vec4(FragPos, 1.0f);
-    vec3 worldPos = worldPos_4.xyz / worldPos_4.w;
-    float s = InitRand(gl_FragCoord.xy);
-    vec3 b1, b2;
-    LocalBasis(normal, b1, b2);
-    vec3 wi = normalize(mat3(invView)*lightDir);
-    vec3 wo = normalize(mat3(invView)*viewDir);
+    vec3 endPosInView = positionInView+relfectDir*1000;
+    // endPosInView /= (endPosInView.z < 0 ? endPosInView.z : 1);
+
+    vec3 start = GetScreenCoord(positionInView);
+    vec3 end = GetScreenCoord(endPosInView);
+    vec3 rayDir = normalize(end-start);
+
+    float maxTraceX = rayDir.x>=0 ? (1-start.x)/rayDir.x:-start.x/rayDir.x;
+    float maxTraceY = rayDir.y>=0 ? (1-start.y)/rayDir.y:-start.y/rayDir.y;
+    float maxTraceZ = rayDir.z>=0 ? (1-start.z)/rayDir.z:-start.z/rayDir.z;
+    float maxTraceDistance = min(maxTraceX,min(maxTraceY,maxTraceZ));
 
     vec3 L_ind = vec3(0.0);
     bool is_hit = false;
+    vec3 hitPos = vec3(0.0);
 
-    vec3 dir = vec3(0.0);
+    vec3 viewDir  = normalize(-positionInView); // viewpos is (0.0.0)
+    vec3 wi = normalize(mat3(invView)*lightDir);
+    vec3 wo = normalize(mat3(invView)*viewDir);
     for(int i = 0; i < 1; i++)
     {
-        float pdf; 
-        vec3 localDir = SampleHemisphereCos(s, pdf);
-        dir = normalize(mat3(b1, b2, normal) * localDir);
-        dir = normalize(reflect(-wo, normal));
-        vec3 position_1;
-        vec2 uv;
-        if(RayMarch_Hiz(worldPos, dir, position_1, uv))
+        if(FindIntersection(start, rayDir, maxTraceDistance, hitPos))
         {
-            // FragColor = vec4(position_1, 1.0);
-            // return;
-            L_ind += EvalDiffuse(dir, wo, TexCoords) * EvalDiffuse(wi, dir, uv);
+            FragColor = vec4(relfectDir, 1.0);
+            return;
+            L_ind += EvalDiffuse(rayDir, wo, TexCoords) * EvalDiffuse(wi, rayDir, hitPos.xy);
             is_hit = true;
+        }
+        else
+        {
+            FragColor = vec4(relfectDir, 0.5);
+            return;
         }
     }
 
@@ -375,3 +382,69 @@ void main()
     FragColor = vec4(L, 1.0);
     // FragColor = vec4(vec3(is_hit), 1.0);
 }
+
+// void main()
+// {             
+//     // retrieve data from gbuffer
+//     vec3 FragPos = texture(gPosition, TexCoords).rgb;
+//     vec3 Normal = texture(gNormal, TexCoords).rgb;
+
+//     vec3 viewDir  = normalize(-FragPos); // viewpos is (0.0.0)
+
+//     vec3 normal = mat3(invView)*Normal;
+//     vec4 worldPos_4 = (invView)*vec4(FragPos, 1.0f);
+//     vec3 worldPos = worldPos_4.xyz / worldPos_4.w;
+//     float s = InitRand(gl_FragCoord.xy);
+//     vec3 b1, b2;
+//     LocalBasis(normal, b1, b2);
+//     vec3 wi = normalize(mat3(invView)*lightDir);
+//     vec3 wo = normalize(mat3(invView)*viewDir);
+
+//     vec3 L_ind = vec3(0.0);
+//     bool is_hit = false;
+
+//     vec3 dir = vec3(0.0);
+//     for(int i = 0; i < 1; i++)
+//     {
+//         float pdf; 
+//         vec3 localDir = SampleHemisphereCos(s, pdf);
+//         dir = normalize(mat3(b1, b2, normal) * localDir);
+//         dir = normalize(reflect(-wo, normal));
+//         vec3 position_1;
+//         vec2 uv;
+//         if(RayMarch_Hiz(worldPos, dir, position_1, uv))
+//         {
+//             // FragColor = vec4(position_1, 1.0);
+//             // return;
+//             L_ind += EvalDiffuse(dir, wo, TexCoords) * EvalDiffuse(wi, dir, uv);
+//             is_hit = true;
+//         }
+//     }
+
+//     L_ind /= float(1);
+
+//     vec3 Diffuse = texture(gAlbedo, TexCoords).rgb;
+
+//     float AmbientOcclusion = texture(ssao, TexCoords).r;
+//     AmbientOcclusion = 1.0f;
+//     // then calculate lighting as usual
+//     vec3 ambient = vec3(0.3 * Diffuse * AmbientOcclusion);
+//     // vec3 ambient = vec3(0.3 * Diffuse );
+//     vec3 lighting  = ambient; 
+//     // diffuse
+//     vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * lightColor;
+//     // specular
+//     vec3 halfwayDir = normalize(lightDir + viewDir);  
+//     float spec = pow(max(dot(Normal, halfwayDir), 0.0), 256.0);
+//     vec3 specular = lightColor * spec * 0.5;
+//     lighting += diffuse + specular;
+
+//     vec3 L = lighting + L_ind;
+//     // if(is_hit)
+//     // {
+//     //     L /= 2.0;
+//     // }
+
+//     FragColor = vec4(L, 1.0);
+//     // FragColor = vec4(vec3(is_hit), 1.0);
+// }

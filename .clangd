@@ -1,0 +1,10 @@
+InlayHints:
+  ParameterNames: No
+  DeducedTypes: No
+Diagnostics:
+  UnusedIncludes: Strict
+  ClangTidy:
+    Add: [bugprone-*, cert-*, modernize-*, performance-*]
+    Remove: [bugprone-easily-swappable-parameters, modernize-use-trailing-return-type]
+    CheckOptions:
+      readability-identifier-naming.VariableCase: camelCase

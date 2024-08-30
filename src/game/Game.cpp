@@ -1,0 +1,77 @@
+#include "Game.hpp"
+
+#include "ActorInstance.hpp"
+#include "ActorSkeletal.hpp"
+#include "ActorSkeletalInstance.hpp"
+
+#include <memory>
+#include <spdlog/spdlog.h>
+
+#include "render/Render.hpp"
+
+void Game::Init(const std::shared_ptr<Render> &render)
+{
+    spdlog::debug("Game Init");
+
+    render_ = render;
+    auto &shaders_map = render_->GetShadersMap();
+    auto &meshes_map = render_->GetMeshesMap();
+
+
+    house_ = std::make_shared<Actor>();
+    house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
+    house_->SetShader(shaders_map["phong"]);
+    actors_.push_back(house_);
+
+    cube_ = std::make_shared<ActorInstance>();
+    cube_->AddMesh(meshes_map["cube"]);
+    cube_->SetShader(shaders_map["phong_instance"]);
+    std::vector<glm::mat4> instance_transforms(10000);
+    for(uint32_t i = 0; i < 100; i++)
+    {
+        for(uint32_t j = 0; j < 100; j++)
+        {
+            instance_transforms[j + i*100] = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f));
+            instance_transforms[j + i*100] = glm::translate(glm::mat4(1.0f), glm::vec3(i*1.0f, 0.0f, j*1.0f)) * instance_transforms[j + i*100];
+        }
+    }
+    cube_->SetInstanceTransforms(instance_transforms);
+    // actors_.push_back(cube_);
+
+    fox_ = std::make_shared<ActorSkeletalInstance>();
+    fox_->SetModelPath("assets/fox/Fox.gltf");
+    fox_->SetShader(shaders_map["skeletal_phong_instance"]);
+    fox_->SetInstanceTransforms(instance_transforms);
+    actors_.push_back(fox_);
+
+    for (auto &actor : actors_)
+    {
+        actor->Init();
+    }
+}
+
+void Game::Update()
+{
+    for (auto &actor : actors_)
+    {
+        actor->Update();
+    }
+}
+
+void Game::SwitchFoxAnimation()
+{
+    static uint32_t index = 0;
+    index = (index + 1) % fox_->GetAnimationCount();
+    fox_->SwitchAnimation(index);
+}
+
+std::vector<std::shared_ptr<Primitive>> Game::GetPrimitives() const
+{
+    std::vector<std::shared_ptr<Primitive>> primitives;
+    for (auto &actor : actors_)
+    {
+        auto actor_primitives = actor->GetPrimitives();
+        primitives.insert(primitives.end(), actor_primitives.begin(), actor_primitives.end());
+    }
+    return primitives;
+}

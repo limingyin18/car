@@ -1,11 +1,9 @@
 #pragma once
 
-#include "render/Primitive.hpp"
+#include "Mesh.hpp"
 
-class Cube : public Primitive
+class Cube : public Mesh
 {
-public:
-    void Init() override;
-
-    glm::vec3 color_;
+  public:
+    void Init(uint32_t _texture);
 };

@@ -1,8 +1,9 @@
 #include "Cube.hpp"
+#include "Vertex.hpp"
 
 using namespace std;
 
-void Cube::Init()
+void Cube::Init(uint32_t _texture)
 {
     uint32_t n = 2;
 
@@ -18,9 +19,7 @@ void Cube::Init()
     {
         for (int j = n - 1; j >= 0; --j)
         {
-            vertices.emplace_back(glm::vec3{-1.0f + i * dx, 1.0f, -1.0f + j * dx},
-                                  glm::vec3{0.0f, 1.0f, 0.0f},
-                                  glm::vec3{1.0f, 1.0f, 1.0f},
+            vertices.emplace_back(glm::vec3{-1.0f + i * dx, 1.0f, -1.0f + j * dx}, glm::vec3{0.0f, 1.0f, 0.0f},
                                   glm::vec2{1.0f - static_cast<float>(i) / static_cast<float>(n - 1),
                                             1.0f - static_cast<float>(j) / static_cast<float>(n - 1)});
         }
@@ -31,9 +30,7 @@ void Cube::Init()
     {
         for (int j = 0; j < n; ++j)
         {
-            vertices.emplace_back(glm::vec3{-1.0f + i * dx, -1.0f, -1.0f + j * dx},
-                                  glm::vec3{0.0f, -1.0f, 0.0f},
-                                  glm::vec3{1.0f, 1.0f, 1.0f},
+            vertices.emplace_back(glm::vec3{-1.0f + i * dx, -1.0f, -1.0f + j * dx}, glm::vec3{0.0f, -1.0f, 0.0f},
                                   glm::vec2{1.0f - static_cast<float>(i) / static_cast<float>(n - 1),
                                             static_cast<float>(j) / static_cast<float>(n - 1)});
         }
@@ -44,9 +41,7 @@ void Cube::Init()
     {
         for (int j = 0; j < n; ++j)
         {
-            vertices.emplace_back(glm::vec3{-1.0f + i * dx, -1.0f + j * dx, -1.0f},
-                                  glm::vec3{0.0f, 0.0f, -1.0f},
-                                  glm::vec3{1.0f, 1.0f, 1.0f},
+            vertices.emplace_back(glm::vec3{-1.0f + i * dx, -1.0f + j * dx, -1.0f}, glm::vec3{0.0f, 0.0f, -1.0f},
                                   glm::vec2{static_cast<float>(i) / static_cast<float>(n - 1),
                                             1.0f - static_cast<float>(j) / static_cast<float>(n - 1)});
         }
@@ -57,9 +52,7 @@ void Cube::Init()
     {
         for (int j = n - 1; j >= 0; --j)
         {
-            vertices.emplace_back(glm::vec3{-1.0f + i * dx, -1.0f + j * dx, 1.0f},
-                                  glm::vec3{0.0f, 0.0f, 1.0f},
-                                  glm::vec3{1.0f, 1.0f, 1.0f},
+            vertices.emplace_back(glm::vec3{-1.0f + i * dx, -1.0f + j * dx, 1.0f}, glm::vec3{0.0f, 0.0f, 1.0f},
                                   glm::vec2{static_cast<float>(i) / static_cast<float>(n - 1),
                                             static_cast<float>(j) / static_cast<float>(n - 1)});
         }
@@ -70,9 +63,7 @@ void Cube::Init()
     {
         for (int j = 0; j < n; ++j)
         {
-            vertices.emplace_back(glm::vec3{-1.0f, -1.0f + i * dx, -1.0f + j * dx},
-                                  glm::vec3{-1.0f, 0.0f, 0.0f},
-                                  glm::vec3{1.0f, 1.0f, 1.0f},
+            vertices.emplace_back(glm::vec3{-1.0f, -1.0f + i * dx, -1.0f + j * dx}, glm::vec3{-1.0f, 0.0f, 0.0f},
                                   glm::vec2{1.0f - static_cast<float>(j) / static_cast<float>(n - 1),
                                             static_cast<float>(i) / static_cast<float>(n - 1)});
         }
@@ -83,9 +74,7 @@ void Cube::Init()
     {
         for (int j = n - 1; j >= 0; --j)
         {
-            vertices.emplace_back(glm::vec3{1.0f, -1.0f + i * dx, -1.0f + j * dx},
-                                  glm::vec3{1.0f, 0.0f, 0.0f},
-                                  glm::vec3{1.0f, 1.0f, 1.0f},
+            vertices.emplace_back(glm::vec3{1.0f, -1.0f + i * dx, -1.0f + j * dx}, glm::vec3{1.0f, 0.0f, 0.0f},
                                   glm::vec2{static_cast<float>(j) / static_cast<float>(n - 1),
                                             static_cast<float>(i) / static_cast<float>(n - 1)});
         }
@@ -125,12 +114,11 @@ void Cube::Init()
         }
     }
 
-    for (auto &v : vertices)
-    {
-        v.color_ = color_;
-    }
-
-    mesh_ = make_shared<Mesh>();
-
-    mesh_->Init(vertices, indices);
+    Texture texture;
+    texture.id = _texture;
+    texture.type = "texture_diffuse";
+    texture.path = "";
+    std::vector<Texture> textures;
+    textures.push_back(texture);
+    Mesh::Init(vertices, indices, textures);
 }

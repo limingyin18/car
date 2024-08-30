@@ -1,29 +1,29 @@
 #version 460 core
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec3 aColor;
-layout (location = 3) in vec2 aTexCoord;
+layout(location = 0) in vec3 pos;
+layout(location = 1) in vec3 norm;
+layout(location = 2) in vec2 tex;
 
+layout(std140, binding = 0) uniform Camera 
+{
+    mat4 projection;
+    mat4 view;
+    vec3 viewPos;
+};
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
 
 out vec3 fNormal;
-out vec3 fColor;
 out vec2 TexCoord;
-
 out vec3 FragPos;
 
 
 void main()
 {
-    vec4 position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    vec4 position = vec4(pos.x, pos.y, pos.z, 1.0);
     gl_Position = projection * view * model * position;
 
-    FragPos = vec3(model * vec4(aPos, 1.0));
+    FragPos = vec3(model * vec4(pos, 1.0));
 
-    fNormal = mat3(transpose(inverse(model))) * aNormal;
-    fColor = aColor;
-    TexCoord = aTexCoord;
+    fNormal = mat3(transpose(inverse(model))) * norm;
+    TexCoord = tex;
 }

@@ -1,6 +1,11 @@
 #include "Model.hpp"
 #include "helper.hpp"
+#include "render/Primitive/Mesh.hpp"
+#include "render/Primitive/Vertex.hpp"
 #include "tools/Tool.hpp"
+
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
 #include <vector>
 
@@ -8,28 +13,29 @@
 
 using namespace std;
 
-Model::~Model()
+Model::Model()
 {
-    for (auto &mesh : meshes)
-    {
-        mesh = nullptr;
-    }
-    meshes.clear();
-    spdlog::info("model destruct");
+    // spdlog::debug("model destruct");
 }
 
-void Model::Load(const std::string &path)
+Model::Model::~Model()
 {
-    Assimp::Importer importer;
+    // spdlog::debug("model destruct");
+}
 
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
-
+void Model::Load(const std::string &_path)
+{
+    // Assimp::Importer importer;
+    importer = make_unique<Assimp::Importer>();
+    const aiScene *scene = importer->ReadFile(_path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+        std::string error = std::string("ERROR::ASSIMP::") + importer->GetErrorString();
+        spdlog::error(error);
+        throw std::runtime_error(error);
         return;
     }
-    directory = path.substr(0, path.find_last_of('/'));
+    directory_ = _path.substr(0, _path.find_last_of('/'));
 
     processNode(scene->mRootNode, scene);
 }
@@ -49,10 +55,10 @@ void Model::processNode(aiNode *node, const aiScene *scene)
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(processMesh(mesh, scene));
+        meshes_.push_back(processMesh(mesh, scene));
 
-        meshes.back()->SetModel(model_matrix);
-        meshes.back()->SetName(node->mName.C_Str());
+        meshes_.back()->SetModel(model_matrix);
+        meshes_.back()->SetName(node->mName.C_Str());
     }
 
     // 接下来对它的子节点重复这一过程
@@ -62,40 +68,20 @@ void Model::processNode(aiNode *node, const aiScene *scene)
     }
 }
 
-std::shared_ptr<Mesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
+std::shared_ptr<IMesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
 {
-    vector<Vertex> vertices;
-    vector<unsigned int> indices;
-    vector<Texture> textures;
+    std::vector<Vertex> vertices;
+    vertices.reserve(mesh->mNumVertices);
+    std::vector<unsigned int> indices;
+    indices.reserve(mesh->mNumFaces * 3);
+    std::vector<Texture> textures;
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
 
         // 处理顶点位置、法线和纹理坐标
-        glm::vec3 pos;
-        pos.x = mesh->mVertices[i].x;
-        pos.y = mesh->mVertices[i].y;
-        pos.z = mesh->mVertices[i].z;
-        vertex.position_ = pos;
-
-        glm::vec3 normal;
-        normal.x = mesh->mNormals[i].x;
-        normal.y = mesh->mNormals[i].y;
-        normal.z = mesh->mNormals[i].z;
-        vertex.normal_ = normal;
-
-        if (mesh->mTextureCoords[0]) // 网格是否有纹理坐标？
-        {
-            glm::vec2 vec;
-            vec.x = mesh->mTextureCoords[0][i].x;
-            vec.y = mesh->mTextureCoords[0][i].y;
-            vertex.uv_ = vec;
-        }
-        else
-        {
-            vertex.uv_ = glm::vec2(0.0f, 0.0f);
-        }
+        ProcessVertex(mesh, i, vertex);
 
         vertices.push_back(vertex);
     }
@@ -111,10 +97,10 @@ std::shared_ptr<Mesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
     if (mesh->mMaterialIndex >= 0)
     {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-        vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
         // vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive");
         // textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
@@ -124,16 +110,34 @@ std::shared_ptr<Mesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
     _mesh->Init(vertices, indices, textures);
     return _mesh;
 }
-
-vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
+void Model::ProcessVertex(aiMesh *mesh, uint32_t index, Vertex &vertex)
 {
-    vector<Texture> textures;
+    // 顶点位置
+    vertex.position_ = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[index]);
+
+    // 顶点法线
+    vertex.normal_ = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[index]);
+
+    // 纹理坐标
+    if (mesh->mTextureCoords[0]) // 网格是否有纹理坐标？
+    {
+        vertex.uv_ = {mesh->mTextureCoords[0][index].x, mesh->mTextureCoords[0][index].y};
+    }
+    else
+    {
+        vertex.uv_ = glm::vec2(0.0f, 0.0f);
+    }
+}
+
+std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
+{
+    std::vector<Texture> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
         aiString str;
         mat->GetTexture(type, i, &str);
         Texture texture;
-        string path = directory + '/' + str.C_Str();
+        std::string path = directory_ + '/' + str.C_Str();
         texture.id = Tool::LoadTexture(path);
         texture.type = typeName;
         texture.path = str.C_Str();
@@ -141,4 +145,9 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
     }
 
     return textures;
+}
+
+const aiScene *Model::GetScene() const
+{
+    return importer->GetScene();
 }
