@@ -10,7 +10,7 @@ class MeshSkeletal : public Mesh
     MeshSkeletal() = default;
     ~MeshSkeletal() = default;
 
-    void Init(const std::vector<VertexSkeletal> &_vertices, const std::vector<uint32_t> &_indices,
+    virtual void Init(const std::vector<VertexSkeletal> &_vertices, const std::vector<uint32_t> &_indices,
               const std::vector<Texture> &_textures);
 
   protected:

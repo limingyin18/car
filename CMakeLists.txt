@@ -20,6 +20,7 @@ set(ASSIMP_BUILD_TESTS OFF)
 add_subdirectory("third_party/assimp-5.4.2")
 add_subdirectory("third_party/spdlog-1.14.1")
 add_subdirectory("third_party/SDL-2.30.5")
+add_subdirectory("third_party/meshoptimizer-0.21")
 
 # add_subdirectory("third_party")
 # add_subdirectory("src/engine")
@@ -35,6 +36,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	spdlog
 	SDL2
 	assimp
+    meshoptimizer
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC

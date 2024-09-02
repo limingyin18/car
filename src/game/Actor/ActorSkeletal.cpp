@@ -16,14 +16,6 @@ void ActorSkeletal::Init()
 
     model_ = make_shared<ModelSkeletal>();
     Actor::Init();
-
-    auto scene = model_->GetScene();
-    animations_.resize(scene->mNumAnimations);
-    for (uint32_t i = 0; i < scene->mNumAnimations; i++)
-    {
-        animations_[i] = make_shared<Animation>(scene->mAnimations[i], scene, (ModelSkeletal *)model_.get());
-    }
-    animator_ = make_shared<Animator>(animations_[0].get());
 }
 
 void ActorSkeletal::Update()
@@ -46,4 +38,22 @@ void ActorSkeletal::SwitchAnimation(uint32_t index)
         return;
     }
     animator_->PlayAnimation(animations_[index].get());
+}
+
+void ActorSkeletal::LoadAnimations()
+{
+    auto scene = model_->GetScene();
+    animations_.resize(scene->mNumAnimations);
+    for (uint32_t i = 0; i < scene->mNumAnimations; i++)
+    {
+        animations_[i] = make_shared<Animation>(scene->mAnimations[i], scene, (ModelSkeletal *)model_.get());
+    }
+    animator_ = make_shared<Animator>(animations_[0].get());
+}
+
+void ActorSkeletal::CreatePrimitives()
+{
+    LoadAnimations();
+
+    Actor::CreatePrimitives();
 }

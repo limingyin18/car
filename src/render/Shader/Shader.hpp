@@ -18,6 +18,8 @@ class Shader
 
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
+    void Init(const char *computePath);
+
     void Init(const char *vertexPath, const char *fragmentPath);
 
     void Init(const char *vertexPath, const char *geomPath, const char *fragmentPath);

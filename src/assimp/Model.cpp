@@ -1,7 +1,8 @@
 #include "Model.hpp"
+#include "assimp/helper.hpp"
 #include "helper.hpp"
-#include "render/Primitive/Mesh.hpp"
-#include "render/Primitive/Vertex.hpp"
+#include "render/Mesh/Mesh.hpp"
+#include "render/Mesh/Vertex.hpp"
 #include "tools/Tool.hpp"
 
 #include <assimp/Importer.hpp>
@@ -27,7 +28,8 @@ void Model::Load(const std::string &_path)
 {
     // Assimp::Importer importer;
     importer = make_unique<Assimp::Importer>();
-    const aiScene *scene = importer->ReadFile(_path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+    const aiScene *scene = importer->ReadFile(_path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals |
+                                                         aiProcess_CalcTangentSpace | aiProcess_GenBoundingBoxes);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         std::string error = std::string("ERROR::ASSIMP::") + importer->GetErrorString();
@@ -108,6 +110,8 @@ std::shared_ptr<IMesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
     std::shared_ptr<Mesh> _mesh = std::make_shared<Mesh>();
     _mesh->Init(vertices, indices, textures);
+    _mesh->SetAABBMin(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMin));
+    _mesh->SetAABBMax(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMax));
     return _mesh;
 }
 void Model::ProcessVertex(aiMesh *mesh, uint32_t index, Vertex &vertex)

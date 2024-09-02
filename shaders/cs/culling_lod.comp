@@ -1,0 +1,143 @@
+#version 460 core
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+// Same as the OpenGL defined struct: DrawElementsIndirectCommand
+struct DrawCommand
+{
+    uint count;         // Num elements (vertices)
+    uint instanceCount; // Number of instances to draw (a.k.a primcount)
+    uint firstIndex;    // Specifies a byte offset (cast to a pointer type) into the buffer bound to
+                        // GL_ELEMENT_ARRAY_BUFFER to start reading indices from.
+    uint baseVertex;    // Specifies a constant that should be added to each element of indices​ when chosing elements
+                        // from the enabled vertex arrays.
+    uint baseInstance;  // Specifies the base instance for use in fetching instanced vertex attributes.
+};
+
+layout(std430, binding = 0) buffer InstanceBuffer
+{
+    mat4 modelMatrices[];
+};
+layout(std430, binding = 1) buffer InstanceIDBuffer
+{
+    uint ids[];
+};
+layout(std430, binding = 2) buffer DrawCommandBuffer
+{
+    DrawCommand drawCommands[];
+};
+
+struct CameraCullingData
+{
+    mat4 view;
+    float fov;
+    float aspect;
+    float znear, zfar;
+
+    vec4 spherebounds;
+    uint drawCount;
+};
+
+layout(std140, binding = 3) uniform CameraCullingDataBuffer
+{
+    CameraCullingData cullData;
+};
+
+bool IsVisible(uint objectIndex)
+{
+    uint index = objectIndex;
+
+    vec4 sphereBounds = cullData.spherebounds;
+    mat4 modelMatrix = modelMatrices[index];
+
+    vec3 center = sphereBounds.xyz;
+    vec4 centerMV = cullData.view * modelMatrix * vec4(center, 1.f);
+    center = centerMV.xyz / centerMV.w;
+    center.z *= -1;
+    float radius = max(modelMatrix[0][0] * sphereBounds.w, modelMatrix[1][1] * sphereBounds.w);
+    radius = max(radius, modelMatrix[2][2] * sphereBounds.w);
+
+    // z
+    if (center.z > cullData.zfar + radius || center.z < cullData.znear - radius)
+        return false;
+
+    float h = center.z * 2.f * tan(cullData.fov / 2.f);
+    float d = radius / cos(cullData.fov / 2.f);
+    // y
+    if (-h / 2.f - d > center.y || center.y > h / 2.f + d)
+        return false;
+
+    // x
+    float w = h * cullData.aspect;
+    d = d * cullData.aspect;
+    if (-w / 2.f - d > center.x || center.x > w / 2.f + d)
+        return false;
+
+    /*
+    //flip Y because we access depth texture that way
+    center.y *= -1;
+
+    if(visible && cullData.occlusionEnabled != 0)
+    {
+        vec4 aabb;
+        if (projectSphere(center, radius, cullData.znear, cullData.P00, cullData.P11, aabb))
+        {
+            float width = (aabb.z - aabb.x) * cullData.pyramidWidth;
+            float height = (aabb.w - aabb.y) * cullData.pyramidHeight;
+
+            float level = floor(log2(max(width, height)));
+
+            // Sampler is set up to do min reduction, so this computes the minimum depth of a 2x2 texel quad
+
+            float depth = textureLod(depthPyramid, (aabb.xy + aabb.zw) * 0.5, level).x;
+            float depthSphere =cullData.znear / (center.z - radius);
+
+            visible = visible && depthSphere >= depth;
+        }
+    }*/
+
+    return true;
+}
+
+int Lod(uint objectIndex)
+{
+    uint index = objectIndex;
+    // if (!objectBuffer.objects[index].cullFlag)
+    // return true;
+
+    vec4 sphereBounds = cullData.spherebounds;
+    mat4 modelMatrix = modelMatrices[index];
+
+    vec3 center = sphereBounds.xyz;
+    vec4 centerMV = cullData.view * modelMatrix * vec4(center, 1.f);
+    center = centerMV.xyz / centerMV.w;
+    center.z *= -1;
+    float radius = sphereBounds.w;
+
+    // z
+    if (center.z < 20.f)
+    {
+        return 0;
+    }
+    else if (center.z < 30.f)
+    {
+        return 1;
+    }
+    else
+    {
+        return 2;
+    }
+}
+
+void main()
+{
+    const uint idx = gl_GlobalInvocationID.x; // Compute space is 1D where x in [0, N)
+    const bool visible = IsVisible(idx);
+
+    if (visible)
+    {
+        int lod = Lod(idx);
+        uint instanceIndex = atomicAdd(drawCommands[lod].instanceCount, 1);
+        ids[lod * cullData.drawCount + instanceIndex] = idx;
+    }
+}

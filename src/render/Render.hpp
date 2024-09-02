@@ -4,8 +4,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "Camera.hpp"
-#include "Primitive/IMesh.hpp"
+#include "Camera/Camera.hpp"
 #include "Primitive/Primitive.hpp"
 #include "SSAO.hpp"
 #include "Shader/Shader.hpp"
@@ -31,12 +30,20 @@ class Render
     void Init(uint32_t width, uint32_t height);
     void Draw(const std::vector<std::shared_ptr<Primitive>> &primitives);
 
-    Camera camera_;
-
     [[nodiscard]] std::unordered_map<std::string, std::shared_ptr<Shader>> &GetShadersMap()
     {
         return shaders_map_;
     }
+
+    void SetCamera(const std::shared_ptr<Camera> &camera)
+    {
+        camera_ = camera;
+    }
+    [[nodiscard]] std::shared_ptr<Camera> GetCamera() const
+    {
+        return camera_;
+    }
+
     [[nodiscard]] std::unordered_map<std::string, std::shared_ptr<IMesh>> &GetMeshesMap()
     {
         return meshes_map_;
@@ -59,6 +66,8 @@ class Render
     std::unordered_map<std::string, uint32_t> textures_map_;
     std::unordered_map<std::string, std::shared_ptr<Shader>> shaders_map_;
     std::unordered_map<std::string, std::shared_ptr<IMesh>> meshes_map_;
+
+    std::shared_ptr<Camera> camera_;
 
     uint32_t ubo_camera_ = -1;
     uint32_t ubo_enviroment_ = -1;

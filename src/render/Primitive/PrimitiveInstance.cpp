@@ -1,9 +1,10 @@
 #include "PrimitiveInstance.hpp"
 
-#include "Mesh.hpp"
 #include "Primitive.hpp"
-#include "Vertex.hpp"
+#include "render/Mesh/Mesh.hpp"
+#include "render/Mesh/Vertex.hpp"
 #include "render/Shader/Shader.hpp"
+
 
 void PrimitiveInstance::Init(const std::shared_ptr<IMesh> &mesh, const std::shared_ptr<Shader> &shader,
                              const std::vector<glm::mat4> &instance_transforms)

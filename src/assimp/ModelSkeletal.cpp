@@ -1,9 +1,9 @@
 #include "ModelSkeletal.hpp"
 
+#include "Bone.hpp"
 #include "helper.hpp"
-#include "render/Primitive/MeshSkeletal.hpp"
-#include "render/Primitive/Vertex.hpp"
-
+#include "render/Mesh/MeshSkeletal.hpp"
+#include "render/Mesh/Vertex.hpp"
 
 std::shared_ptr<IMesh> ModelSkeletal::processMesh(aiMesh *mesh, const aiScene *scene)
 {
@@ -48,6 +48,8 @@ std::shared_ptr<IMesh> ModelSkeletal::processMesh(aiMesh *mesh, const aiScene *s
     ExtractBoneWeightForVertices(vertices, mesh, scene);
     std::shared_ptr<MeshSkeletal> _mesh = std::make_shared<MeshSkeletal>();
     _mesh->Init(vertices, indices, textures);
+    _mesh->SetAABBMin(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMin));
+    _mesh->SetAABBMax(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMax));
     return _mesh;
 }
 

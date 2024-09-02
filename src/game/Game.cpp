@@ -1,13 +1,14 @@
 #include "Game.hpp"
 
-#include "ActorInstance.hpp"
-#include "ActorSkeletal.hpp"
-#include "ActorSkeletalInstance.hpp"
+#include "Actor/ActorInstance.hpp"
+#include "Actor/ActorSkeletal.hpp"
+#include "Actor/ActorSkeletalIndirect.hpp"
+#include "Actor/ActorSkeletalIndirectLod.hpp"
+#include "Actor/ActorSkeletalInstance.hpp"
+#include "render/Render.hpp"
 
 #include <memory>
 #include <spdlog/spdlog.h>
-
-#include "render/Render.hpp"
 
 void Game::Init(const std::shared_ptr<Render> &render)
 {
@@ -17,30 +18,32 @@ void Game::Init(const std::shared_ptr<Render> &render)
     auto &shaders_map = render_->GetShadersMap();
     auto &meshes_map = render_->GetMeshesMap();
 
-
     house_ = std::make_shared<Actor>();
     house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
     house_->SetShader(shaders_map["phong"]);
     actors_.push_back(house_);
 
-    cube_ = std::make_shared<ActorInstance>();
+    cube_ = std::make_shared<ActorIndirect>();
     cube_->AddMesh(meshes_map["cube"]);
-    cube_->SetShader(shaders_map["phong_instance"]);
+    cube_->SetShader(shaders_map["phong_indirect"]);
+    cube_->SetShaderCulling(shaders_map["culling"]);
     std::vector<glm::mat4> instance_transforms(10000);
-    for(uint32_t i = 0; i < 100; i++)
+    for (uint32_t i = 0; i < 100; i++)
     {
-        for(uint32_t j = 0; j < 100; j++)
+        for (uint32_t j = 0; j < 100; j++)
         {
-            instance_transforms[j + i*100] = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, 0.01f));
-            instance_transforms[j + i*100] = glm::translate(glm::mat4(1.0f), glm::vec3(i*1.0f, 0.0f, j*1.0f)) * instance_transforms[j + i*100];
+            instance_transforms[j + i * 100] = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 1.f, 1.f));
+            instance_transforms[j + i * 100] =
+                glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.0f, 0.0f, j * 1.0f)) * instance_transforms[j + i * 100];
         }
     }
-    cube_->SetInstanceTransforms(instance_transforms);
-    // actors_.push_back(cube_);
+    // cube_->SetInstanceTransforms(instance_transforms);
+    actors_.push_back(cube_);
 
-    fox_ = std::make_shared<ActorSkeletalInstance>();
-    fox_->SetModelPath("assets/fox/Fox.gltf");
-    fox_->SetShader(shaders_map["skeletal_phong_instance"]);
+    fox_ = std::make_shared<ActorSkeletalIndirectLod>();
+    fox_->SetModelPath("assets/CesiumMan/glTF/CesiumMan.gltf");
+    fox_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
+    fox_->SetShaderCulling(shaders_map["culling_lod"]);
     fox_->SetInstanceTransforms(instance_transforms);
     actors_.push_back(fox_);
 

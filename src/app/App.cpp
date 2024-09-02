@@ -83,7 +83,7 @@ void App::Run()
             // LOGI(event.type);
             // engine_->processInputEvent(event, engine_->input);
             // ImGui_ImplSDL3_ProcessEvent(&event);
-            ProcessInput(event, render_->camera_, game_);
+            ProcessInput(event, *render_->GetCamera(), game_);
         }
         game_->Update();
         render_->Draw(game_->GetPrimitives());

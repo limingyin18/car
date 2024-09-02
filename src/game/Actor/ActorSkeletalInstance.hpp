@@ -5,4 +5,6 @@
 
 class ActorSkeletalInstance : public ActorSkeletal, public ActorInstance
 {
+  protected:
+    void CreatePrimitives() override;
 };

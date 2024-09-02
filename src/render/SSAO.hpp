@@ -4,7 +4,7 @@
 #include <random>
 #include <glm/glm.hpp>
 
-#include "Camera.hpp"
+#include "Camera/Camera.hpp"
 #include "Shader/Shader.hpp"
 
 /**

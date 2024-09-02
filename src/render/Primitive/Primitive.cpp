@@ -1,23 +1,16 @@
 #include "Primitive.hpp"
 
-#include "../Shader/Shader.hpp"
-#include "Mesh.hpp"
-#include "Vertex.hpp"
-#include <memory>
+#include "render/Mesh/Mesh.hpp"
+#include "render/Mesh/Vertex.hpp"
+#include "render/Shader/Shader.hpp"
 
-Primitive::Primitive() {
-    // spdlog::debug("Primitive construct");
-};
-Primitive::~Primitive() {
-    // spdlog::debug("Primitive destruct");
-};
+#include <memory>
 
 void Primitive::Draw()
 {
     if (mesh_ == nullptr || shader_ == nullptr)
     {
-        spdlog::error("Primitive::Draw: mesh or shader is nullptr");
-        return;
+        throw std::runtime_error("Primitive::Draw: mesh or shader is nullptr");
     }
 
     shader_->use();
@@ -26,8 +19,7 @@ void Primitive::Draw()
     auto &textures = mesh_->GetTextures();
     if (textures.size() > 0)
     {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textures[0].id);
+        glBindTextureUnit(0, textures[0].id);
     }
 
     glBindVertexArray(mesh_->GetVAO());

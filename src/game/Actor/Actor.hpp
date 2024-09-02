@@ -3,12 +3,11 @@
 #include "IActor.hpp"
 
 #include <glm/glm.hpp>
+#include <spdlog/spdlog.h>
 
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <spdlog/spdlog.h>
 
 class IModel;
 class IMesh;

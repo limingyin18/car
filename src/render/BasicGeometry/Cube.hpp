@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Mesh.hpp"
+#include "render/Mesh/Mesh.hpp"
 
 class Cube : public Mesh
 {

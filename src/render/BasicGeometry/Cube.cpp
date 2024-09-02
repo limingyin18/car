@@ -1,5 +1,5 @@
 #include "Cube.hpp"
-#include "Vertex.hpp"
+#include "render/Mesh/Vertex.hpp"
 
 using namespace std;
 

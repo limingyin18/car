@@ -6,15 +6,7 @@
 #include <map>
 
 class VertexSkeletal;
-
-struct BoneInfo
-{
-    /*id is index in finalBoneMatrices*/
-    int id;
-
-    /*offset matrix transforms vertex from model space to bone space*/
-    glm::mat4 offset;
-};
+class BoneInfo;
 
 class ModelSkeletal : public Model
 {
@@ -29,7 +21,7 @@ class ModelSkeletal : public Model
         return m_BoneCounter;
     }
 
-  private:
+  protected:
     std::map<std::string, BoneInfo> m_BoneInfoMap;
     int m_BoneCounter = 0;
 

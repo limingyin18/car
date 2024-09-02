@@ -1,10 +1,12 @@
 #include "Render.hpp"
 
+#include "Primitive/PrimitiveIndirect.hpp"
 #include "assimp/ModelSkeletal.hpp"
 #include "glad/glad.h"
 
 #include "assimp/Model.hpp"
-#include "render/Primitive/Cube.hpp"
+#include "render/BasicGeometry/Cube.hpp"
+#include <memory>
 #include <spdlog/spdlog.h>
 
 #include <filesystem>
@@ -13,6 +15,66 @@
 using namespace std;
 
 void renderQuad();
+
+namespace
+{
+void message_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const *message,
+                      void const *user_param)
+{
+    auto const src_str = [source]() {
+        switch (source)
+        {
+        case GL_DEBUG_SOURCE_API:
+            return "API";
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            return "WINDOW SYSTEM";
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            return "SHADER COMPILER";
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            return "THIRD PARTY";
+        case GL_DEBUG_SOURCE_APPLICATION:
+            return "APPLICATION";
+        case GL_DEBUG_SOURCE_OTHER:
+            return "OTHER";
+        }
+    }();
+
+    auto const type_str = [type]() {
+        switch (type)
+        {
+        case GL_DEBUG_TYPE_ERROR:
+            return "ERROR";
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            return "DEPRECATED_BEHAVIOR";
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            return "UNDEFINED_BEHAVIOR";
+        case GL_DEBUG_TYPE_PORTABILITY:
+            return "PORTABILITY";
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            return "PERFORMANCE";
+        case GL_DEBUG_TYPE_MARKER:
+            return "MARKER";
+        case GL_DEBUG_TYPE_OTHER:
+            return "OTHER";
+        }
+    }();
+
+    auto const severity_str = [severity]() {
+        switch (severity)
+        {
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            return "NOTIFICATION";
+        case GL_DEBUG_SEVERITY_LOW:
+            return "LOW";
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            return "MEDIUM";
+        case GL_DEBUG_SEVERITY_HIGH:
+            return "HIGH";
+        }
+    }();
+    std::cout << src_str << ", " << type_str << ", " << severity_str << ", " << id << ": " << message << '\n';
+}
+} // namespace
 
 Render::Render()
 {
@@ -42,6 +104,22 @@ Render::~Render()
 
 void Render::LoadShaders()
 {
+    spdlog::debug("LoadShaders");
+    // regex match filename with .vert
+    regex cs_filesname_rule(".*comp$");
+    for (auto &entry : filesystem::directory_iterator("shaders/cs"))
+    {
+        string shader_name;
+        string cs_shader_file_name;
+        if (regex_match(entry.path().string(), cs_filesname_rule))
+        {
+            shader_name = entry.path().stem().string();
+            cs_shader_file_name = entry.path().string();
+            shaders_map_[shader_name] = make_shared<Shader>();
+            shaders_map_[shader_name]->Init(cs_shader_file_name.c_str());
+        }
+    }
+
     // regex match filename with .vert
     regex vs_filesname_rule(".*vert$");
     for (auto &entry : filesystem::directory_iterator("shaders/vs_fs"))
@@ -88,6 +166,10 @@ void Render::Init(uint32_t width, uint32_t height)
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(message_callback, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
     glViewport(0, 0, width, height);
     glClearColor(0.0f, 0.0f, 0.0f, 1.f);
@@ -101,12 +183,13 @@ void Render::Init(uint32_t width, uint32_t height)
     sun_direction_ = glm::normalize(light_position_ - glm::vec3(0.0f, 0.0f, 0.0f));
     sun_color_ = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    camera_.SetWidth(width);
-    camera_.SetHeight(height);
-    camera_.SetPosition(glm::vec3(0.0f, 5.0f, 5.0f));
-    camera_.SetFront(glm::vec3(0.f, 0.f, 0.f) - camera_.GetPosition());
-    camera_.LookAt();
-    camera_.Proj();
+    camera_ = make_shared<Camera>();
+    camera_->SetWidth(width);
+    camera_->SetHeight(height);
+    camera_->SetPosition(glm::vec3(0.0f, 5.0f, 5.0f));
+    camera_->SetFront(glm::vec3(0.f, 0.f, 0.f) - camera_->GetPosition());
+    camera_->LookAt();
+    camera_->Proj();
 
     InitShaders();
     CreateUBO();
@@ -116,8 +199,17 @@ void Render::Draw(const std::vector<std::shared_ptr<Primitive>> &primitives)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    camera_.LookAt();
+    camera_->LookAt();
     UpdateUBO();
+
+    for (auto &primitive : primitives)
+    {
+        auto primitives_indirect = dynamic_pointer_cast<PrimitiveIndirect>(primitive);
+        if (primitives_indirect != nullptr)
+        {
+            primitives_indirect->SetCamera(camera_);
+        }
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, multisampled_framebuffer_);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -149,9 +241,9 @@ void Render::InitShaders()
 void Render::CreateUBO()
 {
     glCreateBuffers(1, &ubo_camera_);
-    camera_ubo_data_.proj = camera_.GetProj();
-    camera_ubo_data_.view = camera_.GetView();
-    camera_ubo_data_.viewPos = camera_.GetPosition();
+    camera_ubo_data_.proj = camera_->GetProj();
+    camera_ubo_data_.view = camera_->GetView();
+    camera_ubo_data_.viewPos = camera_->GetPosition();
     glNamedBufferStorage(ubo_camera_, sizeof(UBOCamera), &camera_ubo_data_, GL_DYNAMIC_STORAGE_BIT);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo_camera_);
 
@@ -164,16 +256,9 @@ void Render::CreateUBO()
 
 void Render::UpdateUBO()
 {
-    camera_ubo_data_.view = camera_.GetView();
-    camera_ubo_data_.viewPos = camera_.GetPosition();
+    camera_ubo_data_.view = camera_->GetView();
+    camera_ubo_data_.viewPos = camera_->GetPosition();
     glNamedBufferSubData(ubo_camera_, 0, sizeof(UBOCamera), &camera_ubo_data_);
-}
-
-void Render::CreateCube()
-{
-    auto cube = make_shared<Cube>();
-    cube->Init(textures_map_["default_red"]);
-    meshes_map_["cube"] = cube;
 }
 
 void Render::CreateDefaultTexture()
@@ -195,4 +280,11 @@ void Render::CreateDefaultTexture()
         glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
         textures_map_["default_red"] = texture;
     }
+}
+
+void Render::CreateCube()
+{
+    auto cube = make_shared<Cube>();
+    cube->Init(textures_map_["default_red"]);
+    meshes_map_["cube"] = cube;
 }

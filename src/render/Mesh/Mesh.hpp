@@ -37,6 +37,34 @@ class Mesh : public IMesh
         return name_;
     }
 
+    void SetAABBMin(const glm::vec3 &aabb_min) override
+    {
+        aabb_min_ = aabb_min;
+    }
+    [[nodiscard]] glm::vec3 GetAABBMin() const override
+    {
+        return aabb_min_;
+    }
+
+    void SetAABBMax(const glm::vec3 &aabb_max) override
+    {
+        aabb_max_ = aabb_max;
+    }
+    [[nodiscard]] glm::vec3 GetAABBMax() const override
+    {
+        return aabb_max_;
+    }
+
+    [[nodiscard]] std::vector<Vertex> &GetVertices()
+    {
+        return vertices_;
+    }
+
+    [[nodiscard]] std::vector<uint32_t> &GetIndices()
+    {
+        return indices_;
+    }
+
     [[nodiscard]] std::vector<Texture> &GetTextures() override
     {
         return textures_;
@@ -57,6 +85,8 @@ class Mesh : public IMesh
     std::vector<uint32_t> indices_{};
     std::vector<Texture> textures_{};
 
+    glm::vec3 aabb_min_{0.0f};
+    glm::vec3 aabb_max_{0.0f};
     glm::mat4 model_{1.0f};
 
     uint32_t vbo_ = -1, ebo_ = -1;
