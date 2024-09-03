@@ -43,7 +43,7 @@ void MeshSkeletalLod::GenerateLOD()
 
     for (int i = 0; i < 2; i++)
     {
-        float threshold = 1.0f - 0.1f * (i + 1);
+        float threshold = 1.0f - 0.3f * (i + 1);
         size_t target_index_count = size_t(index_count * threshold);
         float target_error = 1.;
         unsigned int options = 0; // meshopt_SimplifyX flags, 0 is a safe default

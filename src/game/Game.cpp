@@ -5,8 +5,10 @@
 #include "Actor/ActorSkeletalIndirect.hpp"
 #include "Actor/ActorSkeletalIndirectLod.hpp"
 #include "Actor/ActorSkeletalInstance.hpp"
+#include "glm/trigonometric.hpp"
 #include "render/Render.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <spdlog/spdlog.h>
 
@@ -27,21 +29,28 @@ void Game::Init(const std::shared_ptr<Render> &render)
     cube_->AddMesh(meshes_map["cube"]);
     cube_->SetShader(shaders_map["phong_indirect"]);
     cube_->SetShaderCulling(shaders_map["culling"]);
-    std::vector<glm::mat4> instance_transforms(10000);
-    for (uint32_t i = 0; i < 100; i++)
+    uint32_t instance_count = 100;
+    std::vector<glm::mat4> instance_transforms(instance_count * instance_count);
+    for (uint32_t i = 0; i < instance_count; i++)
     {
-        for (uint32_t j = 0; j < 100; j++)
+        for (uint32_t j = 0; j < instance_count; j++)
         {
-            instance_transforms[j + i * 100] = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 1.f, 1.f));
-            instance_transforms[j + i * 100] =
-                glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.0f, 0.0f, j * 1.0f)) * instance_transforms[j + i * 100];
+            uint32_t index = j + i * instance_count;
+            auto &transform = instance_transforms[index];
+            transform = glm::scale(glm::mat4(1.0f), glm::vec3(100.f, 100.f, 100.f));
+            transform = glm::rotate(transform, glm::radians(-90.f), glm::vec3(1, 0, 0));
+            transform = glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.0f, 0.0f, j * 1.0f)) * transform;
         }
     }
     // cube_->SetInstanceTransforms(instance_transforms);
-    actors_.push_back(cube_);
+    // actors_.push_back(cube_);
 
     fox_ = std::make_shared<ActorSkeletalIndirectLod>();
-    fox_->SetModelPath("assets/CesiumMan/glTF/CesiumMan.gltf");
+    // fox_ = std::make_shared<ActorSkeletal>();
+    fox_->SetModelPath("assets/Shield/shield.gltf");
+    // fox_->SetModelPath("assets/fox/Fox.gltf");
+    // fox_->SetShader(shaders_map["skeletal_phong"]);
+    fox_->SetTransform(instance_transforms[0]);
     fox_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
     fox_->SetShaderCulling(shaders_map["culling_lod"]);
     fox_->SetInstanceTransforms(instance_transforms);
