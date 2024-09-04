@@ -115,17 +115,17 @@ int Lod(uint objectIndex)
     float radius = sphereBounds.w;
 
     // z
-    if (center.z < 20.f)
-    {
-        return 0;
-    }
-    else if (center.z < 30.f)
+    if (center.z < 25.f)
     {
         return 1;
     }
-    else
+    else if (center.z < 50.f)
     {
         return 2;
+    }
+    else
+    {
+        return 3;
     }
 }
 

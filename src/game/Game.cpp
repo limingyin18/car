@@ -5,8 +5,10 @@
 #include "Actor/ActorSkeletalIndirect.hpp"
 #include "Actor/ActorSkeletalIndirectLod.hpp"
 #include "Actor/ActorSkeletalInstance.hpp"
+#include "Shield.hpp"
 #include "glm/trigonometric.hpp"
 #include "render/Render.hpp"
+
 
 #include <cstdint>
 #include <memory>
@@ -37,12 +39,12 @@ void Game::Init(const std::shared_ptr<Render> &render)
         {
             uint32_t index = j + i * instance_count;
             auto &transform = instance_transforms[index];
-            transform = glm::scale(glm::mat4(1.0f), glm::vec3(100.f, 100.f, 100.f));
-            transform = glm::rotate(transform, glm::radians(-90.f), glm::vec3(1, 0, 0));
+            transform = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 1.f, 1.f));
+            transform = glm::rotate(transform, glm::radians(0.f), glm::vec3(1, 0, 0));
             transform = glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.0f, 0.0f, j * 1.0f)) * transform;
         }
     }
-    // cube_->SetInstanceTransforms(instance_transforms);
+    cube_->SetInstanceTransforms(instance_transforms);
     // actors_.push_back(cube_);
 
     fox_ = std::make_shared<ActorSkeletalIndirectLod>();
@@ -54,7 +56,15 @@ void Game::Init(const std::shared_ptr<Render> &render)
     fox_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
     fox_->SetShaderCulling(shaders_map["culling_lod"]);
     fox_->SetInstanceTransforms(instance_transforms);
+
     actors_.push_back(fox_);
+
+    // shield_ = std::make_shared<Shield>();
+    // shield_->SetModelPath("assets/Shield/shield.gltf");
+    // shield_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
+    // shield_->SetShaderCulling(shaders_map["culling_lod"]);
+    // shield_->SetInstanceTransforms(instance_transforms);
+    // actors_.push_back(shield_);
 
     for (auto &actor : actors_)
     {

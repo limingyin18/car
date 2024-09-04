@@ -53,14 +53,20 @@ layout(std430, binding = 3) buffer BonesBuffer1
 {
     mat4 BonesMatrices1[];
 };
-layout(std430, binding = 4) buffer BonesBuffer2
+
+layout(std430, binding = 4) buffer FrameCount
 {
-    mat4 BonesMatrices2[];
+    uint frameCount[];
 };
-layout(std430, binding = 5) buffer BonesBuffer3
-{
-    mat4 BonesMatrices3[];
-};
+
+// layout(std430, binding = 4) buffer BonesBuffer2
+// {
+//     mat4 BonesMatrices2[];
+// };
+// layout(std430, binding = 5) buffer BonesBuffer3
+// {
+//     mat4 BonesMatrices3[];
+// };
 
 const int MAX_BONES = 100;
 const int MAX_BONE_INFLUENCE = 4;
@@ -88,27 +94,29 @@ void main()
 
         mat4 BoneMatrices = mat4(1.0f);
         uint index = objectData[instance_id].frame * MAX_BONES + boneIds[i];
-        if (objectData[instance_id].clip == 0)
-        {
-            BoneMatrices = BonesMatrices1[index];
-        }
-        else if (objectData[instance_id].clip == 1)
-        {
-            BoneMatrices = BonesMatrices2[index];
-        }
-        else if (objectData[instance_id].clip == 2)
-        {
-            BoneMatrices = BonesMatrices3[index];
-        }
+        uint frameClipOffset = frameCount[objectData[instance_id].clip];
+        BoneMatrices = BonesMatrices1[frameClipOffset + index];
+        // if (objectData[instance_id].clip == 0)
+        // {
+        //     BoneMatrices = BonesMatrices1[index];
+        // }
+        // else if (objectData[instance_id].clip == 1)
+        // {
+        //     BoneMatrices = BonesMatrices2[index];
+        // }
+        // else if (objectData[instance_id].clip == 2)
+        // {
+        //     BoneMatrices = BonesMatrices3[index];
+        // }
         vec4 localPosition = BoneMatrices * vec4(pos, 1.0f);
         totalPosition += localPosition * weights[i];
         vec3 localNormal = mat3(BoneMatrices) * norm;
         totalNormal += localNormal * weights[i];
     }
 
-    FragPos = vec3(modelMatrices[instance_id] * model * totalPosition);
-    fNormal = mat3(transpose(inverse(modelMatrices[instance_id] * model))) * totalNormal;
-    mat4 viewModel = view * modelMatrices[instance_id] * model;
+    FragPos = vec3(modelMatrices[instance_id] * totalPosition);
+    fNormal = mat3(transpose(inverse(modelMatrices[instance_id]))) * totalNormal;
+    mat4 viewModel = view * modelMatrices[instance_id];
     gl_Position = projection * viewModel * totalPosition;
     TexCoord = tex;
 }

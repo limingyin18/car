@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 #include <memory>
-#include <random>
 #include <spdlog/spdlog.h>
 
 class Actor;
@@ -15,6 +14,7 @@ class ActorSkeletalIndirectLod;
 class Primitive;
 class IMesh;
 class Render;
+class Shield;
 
 class Game
 {
@@ -38,6 +38,7 @@ class Game
   private:
     std::vector<std::shared_ptr<Actor>> actors_;
     std::shared_ptr<ActorSkeletalIndirectLod> fox_;
+    std::shared_ptr<Shield> shield_;
     std::shared_ptr<Actor> house_;
     std::shared_ptr<ActorIndirect> cube_;
     std::shared_ptr<Render> render_;

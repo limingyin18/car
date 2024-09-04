@@ -27,5 +27,7 @@ class PrimitiveSkeletalIndirect : public PrimitiveIndirect
     std::vector<ObjectDataAnimation> object_data_;
 
     std::vector<std::vector<glm::mat4>> bone_transforms_;
-    std::vector<uint32_t> bone_transforms_buffer_objects_;
+    uint32_t bone_transforms_buffer_object_ = -1;
+    std::vector<uint32_t> frame_count_offset_;
+    uint32_t frame_count_offset_buffer_object_ = -1;
 };

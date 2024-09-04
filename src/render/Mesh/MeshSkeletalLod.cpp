@@ -41,11 +41,13 @@ void MeshSkeletalLod::GenerateLOD()
 
     lods_.push_back(indices_.size());
 
-    for (int i = 0; i < 2; i++)
+    float errors[3] = {0.001, 0.0125f, 0.015f};
+    for (int i = 0; i < 3; i++)
     {
-        float threshold = 1.0f - 0.3f * (i + 1);
+        // float threshold = 1.0f - 0.3f * (i + 1);
+        float threshold = 0;
         size_t target_index_count = size_t(index_count * threshold);
-        float target_error = 1.;
+        float target_error = errors[i];
         unsigned int options = 0; // meshopt_SimplifyX flags, 0 is a safe default
         // options = meshopt_SimplifyErrorAbsolute;
         float lod_error = 0.f;

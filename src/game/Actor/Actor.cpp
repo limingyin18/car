@@ -29,7 +29,8 @@ void Actor::Init()
     if (model_path_ != "")
     {
         model_->Load(model_path_);
-        meshes_ = model_->GetMeshes();
+        auto meshes = model_->GetMeshes();
+        meshes_.insert(meshes_.end(), meshes.begin(), meshes.end());
     }
 
     CreatePrimitives();

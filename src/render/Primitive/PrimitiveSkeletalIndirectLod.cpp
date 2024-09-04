@@ -50,10 +50,12 @@ void PrimitiveSkeletalIndirectLod::Draw()
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_);
         glNamedBufferSubData(object_data_buffer_, 0, object_data_.size() * sizeof(ObjectDataAnimation),
                              object_data_.data());
-        for (size_t i = 0; i < bone_transforms_buffer_objects_.size(); i++)
-        {
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3 + i, bone_transforms_buffer_objects_[i]);
-        }
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bone_transforms_buffer_object_);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, frame_count_offset_buffer_object_);
+        // for (size_t i = 0; i < bone_transforms_buffer_objects_.size(); i++)
+        // {
+        //     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3 + i, bone_transforms_buffer_objects_[i]);
+        // }
         glBindBufferBase(GL_UNIFORM_BUFFER, 3, camera_culling_data_buffer_);
 
         auto &textures = mesh_->GetTextures();
