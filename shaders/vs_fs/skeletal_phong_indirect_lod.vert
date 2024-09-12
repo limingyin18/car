@@ -3,6 +3,8 @@
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 norm;
 layout(location = 2) in vec2 tex;
+layout(location = 3) in vec3 tangent;
+layout(location = 4) in vec3 bitangent;
 layout(location = 5) in ivec4 boneIds;
 layout(location = 6) in vec4 weights;
 
@@ -75,6 +77,7 @@ const int MAX_BONE_INFLUENCE = 4;
 out vec3 fNormal;
 out vec2 TexCoord;
 out vec3 FragPos;
+out mat3 TBN;
 
 void main()
 {
@@ -82,6 +85,8 @@ void main()
 
     vec4 totalPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
+    vec3 totalTangent = vec3(0.0f);
+    vec3 totalBitangent = vec3(0.0f);
     for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
     {
         if (boneIds[i] == -1)
@@ -108,15 +113,31 @@ void main()
         // {
         //     BoneMatrices = BonesMatrices3[index];
         // }
+
         vec4 localPosition = BoneMatrices * vec4(pos, 1.0f);
         totalPosition += localPosition * weights[i];
+
         vec3 localNormal = mat3(BoneMatrices) * norm;
         totalNormal += localNormal * weights[i];
+
+        vec3 localTangent = mat3(BoneMatrices) * tangent;
+        totalTangent += localTangent * weights[i];
+
+        vec3 localBitangent = mat3(BoneMatrices) * bitangent;
+        totalBitangent += localBitangent * weights[i];
     }
 
     FragPos = vec3(modelMatrices[instance_id] * totalPosition);
-    fNormal = mat3(transpose(inverse(modelMatrices[instance_id]))) * totalNormal;
+    // fNormal = mat3(transpose(inverse(modelMatrices[instance_id]))) * totalNormal;
     mat4 viewModel = view * modelMatrices[instance_id];
     gl_Position = projection * viewModel * totalPosition;
     TexCoord = tex;
+    vec3 T = normalize(vec3(modelMatrices[instance_id] * vec4(totalTangent, 0.0)));
+    // vec3 B = normalize(vec3(modelMatrices[instance_id] * vec4(totalBitangent, 0.0)));
+    vec3 N = normalize(vec3(modelMatrices[instance_id] * vec4(totalNormal, 0.0)));
+
+    T = normalize(T - dot(T, N) * N);
+    // then retrieve perpendicular vector B with the cross product of T and N
+    vec3 B = cross(N, T);
+    TBN = mat3(T, B, N);
 }

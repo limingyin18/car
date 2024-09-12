@@ -5,6 +5,8 @@
 #include "render/Mesh/MeshSkeletal.hpp"
 #include "render/Mesh/Vertex.hpp"
 
+#include <spdlog/spdlog.h>
+
 std::shared_ptr<IMesh> ModelSkeletal::processMesh(aiMesh *mesh, const aiScene *scene)
 {
     using vertex_type = VertexSkeletal;
@@ -82,7 +84,10 @@ void ModelSkeletal::ExtractBoneWeightForVertices(std::vector<VertexSkeletal> &ve
             int vertexId = weights[weightIndex].mVertexId;
             float weight = weights[weightIndex].mWeight;
             assert(vertexId <= vertices.size());
-            SetVertexBoneData(vertices[vertexId], boneID, weight);
+            if(weight > 0.0f)
+            {
+                SetVertexBoneData(vertices[vertexId], boneID, weight);
+            }
         }
     }
 }

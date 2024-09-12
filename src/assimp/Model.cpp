@@ -3,7 +3,9 @@
 #include "helper.hpp"
 #include "render/Mesh/Mesh.hpp"
 #include "render/Mesh/Vertex.hpp"
+#include "render/Render.hpp"
 #include "tools/Tool.hpp"
+
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -30,6 +32,7 @@ void Model::Load(const std::string &_path)
     importer = make_unique<Assimp::Importer>();
     const aiScene *scene = importer->ReadFile(_path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals |
                                                          aiProcess_CalcTangentSpace | aiProcess_GenBoundingBoxes);
+
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         std::string error = std::string("ERROR::ASSIMP::") + importer->GetErrorString();
@@ -142,7 +145,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
         mat->GetTexture(type, i, &str);
         Texture texture;
         std::string path = directory_ + '/' + str.C_Str();
-        texture.id = Tool::LoadTexture(path);
+        texture.id = Render::GetInstance().GetTexture(path);
         texture.type = typeName;
         texture.path = str.C_Str();
         textures.push_back(texture);

@@ -10,6 +10,11 @@ class ActorInstance : public virtual Actor
         instance_transforms_ = instance_transforms;
     }
 
+    [[nodiscard]] std::vector<glm::mat4> &GetInstanceTransforms()
+    {
+        return instance_transforms_;
+    }
+
   protected:
     void CreatePrimitives() override;
 

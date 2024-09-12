@@ -1,9 +1,11 @@
 #include "ModelSkeletalLod.hpp"
 
 #include "Bone.hpp"
+#include "assimp/material.h"
 #include "helper.hpp"
 #include "render/Mesh/MeshSkeletalLod.hpp"
 #include "render/Mesh/Vertex.hpp"
+#include "spdlog/spdlog.h"
 
 std::shared_ptr<IMesh> ModelSkeletalLod::processMesh(aiMesh *mesh, const aiScene *scene)
 {
@@ -37,10 +39,15 @@ std::shared_ptr<IMesh> ModelSkeletalLod::processMesh(aiMesh *mesh, const aiScene
     {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+        std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
+        // spdlog::debug("path {}", normalMaps[0].path);
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
         std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
         // vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive");
         // textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
     }
@@ -51,4 +58,21 @@ std::shared_ptr<IMesh> ModelSkeletalLod::processMesh(aiMesh *mesh, const aiScene
     _mesh->SetAABBMin(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMin));
     _mesh->SetAABBMax(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMax));
     return _mesh;
+}
+
+void ModelSkeletalLod::ProcessVertex(aiMesh *mesh, uint32_t index, VertexSkeletal &vertex)
+{
+    Model::ProcessVertex(mesh, index, vertex);
+
+    // tangent
+    if (mesh->mTangents != nullptr)
+    {
+        vertex.tangent_ = AssimpGLMHelpers::GetGLMVec(mesh->mTangents[index]);
+    }
+
+    // bitangent
+    if (mesh->mBitangents != nullptr)
+    {
+        vertex.bitangent_ = AssimpGLMHelpers::GetGLMVec(mesh->mBitangents[index]);
+    }
 }

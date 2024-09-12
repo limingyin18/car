@@ -3,6 +3,7 @@
 #include "Primitive/PrimitiveIndirect.hpp"
 #include "assimp/ModelSkeletal.hpp"
 #include "glad/glad.h"
+#include "tools/Tool.hpp"
 
 #include "assimp/Model.hpp"
 #include "render/BasicGeometry/Cube.hpp"
@@ -287,4 +288,18 @@ void Render::CreateCube()
     auto cube = make_shared<Cube>();
     cube->Init(textures_map_["default_red"]);
     meshes_map_["cube"] = cube;
+}
+
+uint32_t Render::GetTexture(const std::string &path)
+{
+    auto it = textures_map_.find(path);
+    if (it != textures_map_.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        textures_map_[path] = Tool::LoadTexture(path);
+        return textures_map_[path];
+    }
 }

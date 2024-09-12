@@ -19,27 +19,41 @@ class Shield;
 class Game
 {
   public:
-    Game()
+    static Game &GetInstance()
     {
-        spdlog::debug("Game construct");
-    };
+        static Game instance;
+        return instance;
+    }
+
+    void Init();
+    void Update();
+
+    [[nodiscard]] std::vector<std::shared_ptr<Primitive>> GetPrimitives() const;
+
+    void SwitchAnimation();
+
     ~Game()
     {
         spdlog::debug("Game destruct");
     };
 
-    void Init(const std::shared_ptr<Render> &render);
-    void Update();
-
-    [[nodiscard]] std::vector<std::shared_ptr<Primitive>> GetPrimitives() const;
-
-    void SwitchFoxAnimation();
-
   private:
+    Game()
+    {
+        spdlog::debug("Game construct");
+    };
+    Game(const Game &) = delete;
+
+    void InitHouse();
+    void InitShields();
+    void InitArrows();
+    void InitCubes();
+
     std::vector<std::shared_ptr<Actor>> actors_;
-    std::shared_ptr<ActorSkeletalIndirectLod> fox_;
-    std::shared_ptr<Shield> shield_;
+
+    uint32_t index = 0;
+    std::shared_ptr<ActorSkeletalIndirectLod> shield_;
+    std::shared_ptr<ActorSkeletalIndirectLod> arrow_;
     std::shared_ptr<Actor> house_;
     std::shared_ptr<ActorIndirect> cube_;
-    std::shared_ptr<Render> render_;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 
@@ -25,7 +26,11 @@ struct UBOEnviroment
 class Render
 {
   public:
-    Render();
+    static Render &GetInstance()
+    {
+        static Render instance;
+        return instance;
+    }
     ~Render();
     void Init(uint32_t width, uint32_t height);
     void Draw(const std::vector<std::shared_ptr<Primitive>> &primitives);
@@ -48,8 +53,10 @@ class Render
     {
         return meshes_map_;
     }
+    uint32_t GetTexture(const std::string &path);
 
   private:
+    Render();
     void CreateCube();
     void LoadShaders();
     void InitShaders();

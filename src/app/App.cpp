@@ -11,11 +11,10 @@
 #include <SDL2/SDL_video.h>
 #include <memory>
 
-void ProcessInput(SDL_Event event, Camera &camera, std::shared_ptr<Game> game);
+void ProcessInput(SDL_Event event, Camera &camera, Game &game);
 
 void App::Destroy()
 {
-    render_ = nullptr;
     spdlog::debug("App Destroy");
 }
 
@@ -23,11 +22,12 @@ void App::Init()
 {
     InitWSI();
 
-    render_ = std::make_shared<Render>();
-    render_->Init(width_, height_);
+    // render_ = std::make_shared<Render>();
+    auto &render = Render::GetInstance();
+    render.Init(width_, height_);
 
-    game_ = std::make_shared<Game>();
-    game_->Init(render_);
+    auto &game = Game::GetInstance();
+    game.Init();
 }
 
 void App::InitWSI()
@@ -74,6 +74,8 @@ void App::Run()
 {
     spdlog::info("app run");
 
+    auto &game = Game::GetInstance();
+    auto &render = Render::GetInstance();
     SDL_Event event;
     do
     {
@@ -83,10 +85,10 @@ void App::Run()
             // LOGI(event.type);
             // engine_->processInputEvent(event, engine_->input);
             // ImGui_ImplSDL3_ProcessEvent(&event);
-            ProcessInput(event, *render_->GetCamera(), game_);
+            ProcessInput(event, *render.GetCamera(), game);
         }
-        game_->Update();
-        render_->Draw(game_->GetPrimitives());
+        game.Update();
+        render.Draw(game.GetPrimitives());
         // update();
         // auto duration =
         // std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
@@ -99,7 +101,7 @@ void App::Run()
     } while (event.type != SDL_QUIT);
 }
 
-void ProcessInput(SDL_Event event, Camera &camera, std::shared_ptr<Game> game)
+void ProcessInput(SDL_Event event, Camera &camera, Game &game)
 {
     float speed = 0.5f;
     switch (event.type)
@@ -139,7 +141,7 @@ void ProcessInput(SDL_Event event, Camera &camera, std::shared_ptr<Game> game)
             camera.RotateYaw(-1.0f * speed);
             break;
         case SDLK_f:
-            game->SwitchFoxAnimation();
+            game.SwitchAnimation();
             break;
         case SDLK_ESCAPE:
             SDL_Event quit_event;

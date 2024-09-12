@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <random>
 #include <string>
 
@@ -12,6 +13,20 @@ class Tool
     {
         static Tool instance;
         return instance;
+    }
+
+    template <class T> static void WriteToFile(const std::string &path, const std::vector<T> &content)
+    {
+        std::ofstream outfile{path, std::ios::binary};
+        outfile.write(reinterpret_cast<const char *>(content.data()), content.size() * sizeof(T));
+        outfile.close();
+    }
+
+    template <class T> static void ReadFromFile(const std::string &path, std::vector<T> &content)
+    {
+        std::ifstream infile{path, std::ios::binary};
+        infile.read(reinterpret_cast<char *>(content.data()), content.size() * sizeof(T));
+        infile.close();
     }
 
     [[nodiscard]] float RandomFloat()

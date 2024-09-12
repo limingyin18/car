@@ -5,33 +5,70 @@
 #include "Actor/ActorSkeletalIndirect.hpp"
 #include "Actor/ActorSkeletalIndirectLod.hpp"
 #include "Actor/ActorSkeletalInstance.hpp"
-#include "Shield.hpp"
 #include "glm/trigonometric.hpp"
 #include "render/Render.hpp"
-
 
 #include <cstdint>
 #include <memory>
 #include <spdlog/spdlog.h>
 
-void Game::Init(const std::shared_ptr<Render> &render)
+void Game::Init()
 {
     spdlog::debug("Game Init");
 
-    render_ = render;
-    auto &shaders_map = render_->GetShadersMap();
-    auto &meshes_map = render_->GetMeshesMap();
+    InitHouse();
+    InitShields();
+    InitArrows();
+    InitCubes();
 
-    house_ = std::make_shared<Actor>();
-    house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
-    house_->SetShader(shaders_map["phong"]);
-    actors_.push_back(house_);
+    for (auto &actor : actors_)
+    {
+        actor->Init();
+    }
+}
 
-    cube_ = std::make_shared<ActorIndirect>();
-    cube_->AddMesh(meshes_map["cube"]);
-    cube_->SetShader(shaders_map["phong_indirect"]);
-    cube_->SetShaderCulling(shaders_map["culling"]);
-    uint32_t instance_count = 100;
+void Game::Update()
+{
+    if (index == 1)
+    {
+        auto &transforms = shield_->GetInstanceTransforms();
+        for (auto &transform : transforms)
+        {
+            transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.5f * 0.016f));
+        }
+    }
+    for (auto &actor : actors_)
+    {
+        actor->Update();
+    }
+}
+
+void Game::SwitchAnimation()
+{
+    index = (index + 1) % shield_->GetAnimationCount();
+    shield_->SwitchAnimation(index);
+
+    arrow_->SwitchAnimation(index);
+}
+
+std::vector<std::shared_ptr<Primitive>> Game::GetPrimitives() const
+{
+    std::vector<std::shared_ptr<Primitive>> primitives;
+    for (auto &actor : actors_)
+    {
+        auto actor_primitives = actor->GetPrimitives();
+        primitives.insert(primitives.end(), actor_primitives.begin(), actor_primitives.end());
+    }
+    return primitives;
+}
+
+void Game::InitShields()
+{
+    auto &render = Render::GetInstance();
+    auto &shaders_map = render.GetShadersMap();
+    auto &meshes_map = render.GetMeshesMap();
+
+    uint32_t instance_count = 10;
     std::vector<glm::mat4> instance_transforms(instance_count * instance_count);
     for (uint32_t i = 0; i < instance_count; i++)
     {
@@ -44,56 +81,89 @@ void Game::Init(const std::shared_ptr<Render> &render)
             transform = glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.0f, 0.0f, j * 1.0f)) * transform;
         }
     }
+
+    shield_ = std::make_shared<ActorSkeletalIndirectLod>();
+    shield_->SetModelPath("assets/Shield/sword.gltf");
+    shield_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
+    shield_->SetShaderCulling(shaders_map["culling_lod"]);
+    shield_->SetInstanceTransforms(instance_transforms);
+    shield_->AddAnimation("assets/Shield/idle.gltf");
+    shield_->AddAnimation("assets/Shield/walk.gltf");
+    shield_->AddAnimation("assets/Shield/slash.gltf");
+    shield_->AddAnimation("assets/Shield/death.gltf");
+
+    actors_.push_back(shield_);
+}
+
+void Game::InitArrows()
+{
+    auto &render = Render::GetInstance();
+    auto &shaders_map = render.GetShadersMap();
+    auto &meshes_map = render.GetMeshesMap();
+
+    uint32_t instance_count = 10;
+    std::vector<glm::mat4> instance_transforms(instance_count * instance_count);
+    for (uint32_t i = 0; i < instance_count; i++)
+    {
+        for (uint32_t j = 0; j < instance_count; j++)
+        {
+            uint32_t index = j + i * instance_count;
+            auto &transform = instance_transforms[index];
+            transform = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 1.f, 1.f));
+            transform = glm::rotate(transform, glm::radians(180.f), glm::vec3(0, 1, 0));
+            transform = glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.0f, 0.0f, 100 + 10 + j * 1.0f)) * transform;
+        }
+    }
+
+    arrow_ = std::make_shared<ActorSkeletalIndirectLod>();
+    arrow_->SetModelPath("assets/Arrow/arrow.gltf");
+    arrow_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
+    arrow_->SetShaderCulling(shaders_map["culling_lod"]);
+    arrow_->SetInstanceTransforms(instance_transforms);
+    arrow_->AddAnimation("assets/arrow/idle.gltf");
+    arrow_->AddAnimation("assets/arrow/walk.gltf");
+    arrow_->AddAnimation("assets/arrow/attack.gltf");
+    arrow_->AddAnimation("assets/arrow/death.gltf");
+
+    actors_.push_back(arrow_);
+}
+
+void Game::InitHouse()
+{
+    auto &render = Render::GetInstance();
+    auto &shaders_map = render.GetShadersMap();
+    auto &meshes_map = render.GetMeshesMap();
+
+    house_ = std::make_shared<Actor>();
+    house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
+    house_->SetShader(shaders_map["phong"]);
+    actors_.push_back(house_);
+}
+
+void Game::InitCubes()
+{
+    auto &render = Render::GetInstance();
+    auto &shaders_map = render.GetShadersMap();
+    auto &meshes_map = render.GetMeshesMap();
+
+    uint32_t instance_count = 10;
+    std::vector<glm::mat4> instance_transforms(instance_count * instance_count);
+    for (uint32_t i = 0; i < instance_count; i++)
+    {
+        for (uint32_t j = 0; j < instance_count; j++)
+        {
+            uint32_t index = j + i * instance_count;
+            auto &transform = instance_transforms[index];
+            transform = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+            transform = glm::rotate(transform, glm::radians(0.f), glm::vec3(0, 1, 0));
+            transform = glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.0f, 0.0f, j * 1.0f)) * transform;
+        }
+    }
+
+    cube_ = std::make_shared<ActorIndirect>();
+    cube_->AddMesh(meshes_map["cube"]);
+    cube_->SetShader(shaders_map["phong_indirect"]);
+    cube_->SetShaderCulling(shaders_map["culling"]);
     cube_->SetInstanceTransforms(instance_transforms);
-    // actors_.push_back(cube_);
-
-    fox_ = std::make_shared<ActorSkeletalIndirectLod>();
-    // fox_ = std::make_shared<ActorSkeletal>();
-    fox_->SetModelPath("assets/Shield/shield.gltf");
-    // fox_->SetModelPath("assets/fox/Fox.gltf");
-    // fox_->SetShader(shaders_map["skeletal_phong"]);
-    fox_->SetTransform(instance_transforms[0]);
-    fox_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
-    fox_->SetShaderCulling(shaders_map["culling_lod"]);
-    fox_->SetInstanceTransforms(instance_transforms);
-
-    actors_.push_back(fox_);
-
-    // shield_ = std::make_shared<Shield>();
-    // shield_->SetModelPath("assets/Shield/shield.gltf");
-    // shield_->SetShader(shaders_map["skeletal_phong_indirect_lod"]);
-    // shield_->SetShaderCulling(shaders_map["culling_lod"]);
-    // shield_->SetInstanceTransforms(instance_transforms);
-    // actors_.push_back(shield_);
-
-    for (auto &actor : actors_)
-    {
-        actor->Init();
-    }
-}
-
-void Game::Update()
-{
-    for (auto &actor : actors_)
-    {
-        actor->Update();
-    }
-}
-
-void Game::SwitchFoxAnimation()
-{
-    static uint32_t index = 0;
-    index = (index + 1) % fox_->GetAnimationCount();
-    fox_->SwitchAnimation(index);
-}
-
-std::vector<std::shared_ptr<Primitive>> Game::GetPrimitives() const
-{
-    std::vector<std::shared_ptr<Primitive>> primitives;
-    for (auto &actor : actors_)
-    {
-        auto actor_primitives = actor->GetPrimitives();
-        primitives.insert(primitives.end(), actor_primitives.begin(), actor_primitives.end());
-    }
-    return primitives;
+    actors_.push_back(cube_);
 }

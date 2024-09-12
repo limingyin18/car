@@ -21,7 +21,7 @@ void MeshSkeletal::SetupBuffer()
 {
     // create vertex buffer
     glCreateBuffers(1, &vbo_);
-    glNamedBufferStorage(vbo_, vertices_.size() * sizeof(VertexSkeletal), vertices_.data(), 0);
+    glNamedBufferStorage(vbo_, vertices_.size() * sizeof(VertexSkeletal), vertices_.data(), GL_DYNAMIC_STORAGE_BIT);
 
     // create index buffer
     glCreateBuffers(1, &ebo_);
@@ -41,4 +41,9 @@ void MeshSkeletal::SetupVAO()
     glVertexArrayElementBuffer(vao_, ebo_);
 
     VertexSkeletal::SetupVAO(vao_);
+}
+
+void MeshSkeletal::UpdateVBO()
+{
+    glNamedBufferSubData(vbo_, 0, vertices_.size() * sizeof(VertexSkeletal), vertices_.data());
 }

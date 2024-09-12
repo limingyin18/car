@@ -10,6 +10,8 @@
 #include "glad/glad.h"
 #include <cmath>
 #include <cstddef>
+#include <filesystem>
+#include <string>
 
 using namespace std;
 
@@ -20,11 +22,19 @@ void ActorSkeletalIndirect::SaveBakedData(uint32_t animation_clip_type)
     size_t vertices_size = mesh->GetVertices().size();
 
     bone_transforms_[animation_clip_type].resize((frame_counts_[animation_clip_type]) * MAX_BONES);
-    float ticks_per_second = animations_[animation_clip_type]->GetTicksPerSecond();
-    float dt = 10.0f / ticks_per_second;
 
     animator_->PlayAnimation(animations_[animation_clip_type].get());
+
+    string name_baked = animation_paths_[animation_clip_type] + "_baked";
+    // file exists
+    if (std::filesystem::exists(name_baked))
+    {
+        Tool::ReadFromFile(name_baked, bone_transforms_[animation_clip_type]);
+        return;
+    }
     // bake animation
+    float ticks_per_second = animations_[animation_clip_type]->GetTicksPerSecond();
+    float dt = 10.0f / ticks_per_second;
     for (int i = 0; i <= frame_counts_[animation_clip_type] / 10; i++)
     {
         if (i == 0)
@@ -42,6 +52,9 @@ void ActorSkeletalIndirect::SaveBakedData(uint32_t animation_clip_type)
             bone_transforms_[animation_clip_type][i * MAX_BONES + j] = transforms[j];
         }
     }
+
+    Tool::WriteToFile(name_baked, bone_transforms_[animation_clip_type]);
+
     // size_t size_bones_baked = sizeof(glm::mat4) * bone_transforms_[animation_clip_type].size();
     // glCreateBuffers(1, &bone_transforms_buffer_objects_[animation_clip_type]);
     // glNamedBufferStorage(bone_transforms_buffer_objects_[animation_clip_type], size_bones_baked,
@@ -78,6 +91,10 @@ void ActorSkeletalIndirect::CreatePrimitives()
 
 void ActorSkeletalIndirect::Update()
 {
+    if (animations_.size() == 0)
+    {
+        return;
+    }
     for (auto &object_data : object_data_)
     {
         // object_data.animation_clip_ = 0;
@@ -89,6 +106,7 @@ void ActorSkeletalIndirect::Update()
     {
         auto primitive = dynamic_pointer_cast<PrimitiveSkeletalIndirect>(primitives_[i]);
         primitive->SetObjectData(object_data_);
+        primitive->SetInstanceTransforms(instance_transforms_);
     }
     ActorIndirect::Update();
 }
@@ -97,7 +115,7 @@ void ActorSkeletalIndirect::SwitchAnimation(uint32_t index)
 {
     for (size_t i = 0; i < object_data_.size(); i++)
     {
-        index = std::round(Tool::GetInstance().RandomFloat() * (animations_.size() - 1));
+        // index = std::round(Tool::GetInstance().RandomFloat() * (animations_.size() - 1));
         object_data_[i].animation_clip_ = index;
         object_data_[i].frame_ = frame_offsets_[i];
         object_data_[i].frame_ = object_data_[i].frame_ % (frame_counts_[object_data_[i].animation_clip_] / 10 + 1);
@@ -107,6 +125,10 @@ void ActorSkeletalIndirect::SwitchAnimation(uint32_t index)
 void ActorSkeletalIndirect::InitFrameOffsets()
 {
     frame_offsets_.resize(instance_transforms_.size());
+    if (frame_counts_.size() == 0)
+    {
+        return;
+    }
     for (auto &frame_offset : frame_offsets_)
     {
         frame_offset = static_cast<uint32_t>(static_cast<float>(frame_counts_[0]) * Tool::GetInstance().RandomFloat());

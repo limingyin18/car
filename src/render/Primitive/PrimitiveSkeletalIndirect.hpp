@@ -20,6 +20,7 @@ class PrimitiveSkeletalIndirect : public PrimitiveIndirect
         object_data_ = object_data;
     }
 
+
     void Draw() override;
 
   protected:

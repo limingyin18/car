@@ -28,8 +28,10 @@ class ActorSkeletal : public virtual Actor
         return animations_.size();
     }
     virtual void SwitchAnimation(uint32_t index);
+    void AddAnimation(const std::string &path);
 
   protected:
+    std::vector<std::string> animation_paths_;
     void CreatePrimitives() override;
     void LoadAnimations();
     std::vector<std::shared_ptr<Animation>> animations_;

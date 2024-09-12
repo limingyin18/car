@@ -61,11 +61,11 @@ void MeshSkeletalLod::GenerateLOD()
         //                             sizeof(VertexSkeletal), target_index_count, target_error, &lod_error));
 
         lods_.push_back(lod.size());
-        spdlog::debug("target_index_count: {}", target_index_count);
-        spdlog::debug("target_error: {}", target_error);
-        spdlog::debug("threshold: {}", threshold);
-        spdlog::debug("LOD {} error: {}", i, lod_error);
-        spdlog::debug("LOD {} index count: {}", i, lod.size());
+        // spdlog::debug("target_index_count: {}", target_index_count);
+        // spdlog::debug("target_error: {}", target_error);
+        // spdlog::debug("threshold: {}", threshold);
+        // spdlog::debug("LOD {} error: {}", i, lod_error);
+        // spdlog::debug("LOD {} index count: {}", i, lod.size());
         indices_.insert(indices_.end(), lod.begin(), lod.end());
     }
 

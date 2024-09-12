@@ -11,7 +11,14 @@ class MeshSkeletal : public Mesh
     ~MeshSkeletal() = default;
 
     virtual void Init(const std::vector<VertexSkeletal> &_vertices, const std::vector<uint32_t> &_indices,
-              const std::vector<Texture> &_textures);
+                      const std::vector<Texture> &_textures);
+
+    [[nodiscard]] std::vector<VertexSkeletal> &GetVertices()
+    {
+        return vertices_;
+    }
+
+    void UpdateVBO();
 
   protected:
     void SetupBuffer() override;

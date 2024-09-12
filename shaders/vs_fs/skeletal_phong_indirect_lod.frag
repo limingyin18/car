@@ -18,13 +18,16 @@ layout(std140, binding = 1) uniform Enviroment
 in vec3 fNormal;
 in vec2 TexCoord;
 in vec3 FragPos;
+in mat3 TBN;
 
 out vec4 FragColor;
 
-float specularStrength = 0.5;
+// float specularStrength = 0.5;
 
-layout(location = 0) uniform sampler2D ambientTexture;
-layout(location = 1) uniform sampler2DArray shadowMap;
+layout(binding = 0) uniform sampler2D ambientTexture;
+layout(binding = 1) uniform sampler2D normalMap;
+layout(binding = 2) uniform sampler2D speculatMap;
+layout(binding = 3) uniform sampler2DArray shadowMap;
 
 layout(std140) uniform LightSpaceMatrices
 {
@@ -102,13 +105,17 @@ void main()
     float ambientStrength = 0.3f;
     vec3 ambient = ambientStrength * lightColor;
 
-    vec3 norm = normalize(fNormal);
+    // vec3 norm = normalize(fNormal);
+    vec3 norm = texture(normalMap, TexCoord).rgb;
+    norm = norm * 2.0 - 1.0;
+    norm = normalize(TBN * norm);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+    float specularStrength = texture(speculatMap, TexCoord).r;
     vec3 specular = specularStrength * spec * lightColor;
 
     vec3 color = texture(ambientTexture, TexCoord).rgb;
