@@ -5,5 +5,5 @@
 class Sphere : public Mesh
 {
   public:
-    void Init(uint32_t _texture);
+    void Init(uint32_t lat = 360, uint32_t lng = 180);
 };

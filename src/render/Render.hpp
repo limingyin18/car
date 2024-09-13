@@ -58,6 +58,7 @@ class Render
   private:
     Render();
     void CreateCube();
+    void CreateSphere();
     void LoadShaders();
     void InitShaders();
 

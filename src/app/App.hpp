@@ -30,6 +30,4 @@ private:
     uint32_t width_ = 1280;
     uint32_t height_ = 960;
     std::shared_ptr<SDL_Window> window_ = nullptr;
-    // std::shared_ptr<Render> render_ = nullptr;
-    // std::shared_ptr<Game> game_ = nullptr;
 };

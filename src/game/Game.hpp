@@ -37,12 +37,15 @@ class Game
         spdlog::debug("Game destruct");
     };
 
+    Game(const Game &) = delete;
+
   private:
     Game()
     {
         spdlog::debug("Game construct");
     };
-    Game(const Game &) = delete;
+
+    void TestBasicGeometry();
 
     void InitHouse();
     void InitShields();

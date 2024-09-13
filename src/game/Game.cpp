@@ -16,10 +16,7 @@ void Game::Init()
 {
     spdlog::debug("Game Init");
 
-    InitHouse();
-    InitShields();
-    InitArrows();
-    InitCubes();
+    TestBasicGeometry();
 
     for (auto &actor : actors_)
     {

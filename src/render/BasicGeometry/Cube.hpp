@@ -5,5 +5,5 @@
 class Cube : public Mesh
 {
   public:
-    void Init(uint32_t _texture);
+    void Init(size_t n = 2);
 };

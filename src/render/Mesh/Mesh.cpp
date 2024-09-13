@@ -17,15 +17,20 @@ Mesh::~Mesh()
     glDeleteVertexArrays(1, &vao_);
 }
 
-void Mesh::Init(const std::vector<Vertex> &_vertices, const std::vector<uint32_t> &_indices,
-                const std::vector<Texture> &_textures)
+void Mesh::Init(const std::vector<Vertex> &_vertices, const std::vector<uint32_t> &_indices)
 {
     vertices_ = _vertices;
     indices_ = _indices;
-    textures_ = _textures;
 
     SetupBuffer();
     SetupVAO();
+}
+
+void Mesh::Init(const std::vector<Vertex> &_vertices, const std::vector<uint32_t> &_indices,
+                const std::vector<Texture> &_textures)
+{
+    Init(_vertices, _indices);
+    textures_ = _textures;
 }
 
 void Mesh::SetupBuffer()
@@ -52,4 +57,9 @@ void Mesh::SetupVAO()
     glVertexArrayElementBuffer(vao_, ebo_);
 
     Vertex::SetupVAO(vao_);
+}
+
+void Mesh::SetTextures(const std::vector<Texture> &textures)
+{
+    textures_ = textures;
 }

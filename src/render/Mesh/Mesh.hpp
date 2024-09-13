@@ -16,6 +16,7 @@ class Mesh : public IMesh
     Mesh();
     ~Mesh();
 
+    void Init(const std::vector<Vertex> &_vertices, const std::vector<uint32_t> &_indices);
     void Init(const std::vector<Vertex> &_vertices, const std::vector<uint32_t> &_indices,
               const std::vector<Texture> &_textures);
 
@@ -69,6 +70,7 @@ class Mesh : public IMesh
     {
         return textures_;
     }
+    void SetTextures(const std::vector<Texture> &textures);
 
     uint32_t GetVAO() override
     {

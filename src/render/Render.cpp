@@ -7,6 +7,8 @@
 
 #include "assimp/Model.hpp"
 #include "render/BasicGeometry/Cube.hpp"
+#include "render/BasicGeometry/Sphere.hpp"
+#include "render/Mesh/Vertex.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
 
@@ -167,6 +169,8 @@ void Render::Init(uint32_t width, uint32_t height)
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(message_callback, nullptr);
@@ -180,6 +184,7 @@ void Render::Init(uint32_t width, uint32_t height)
     LoadShaders();
     CreateDefaultTexture();
     CreateCube();
+    CreateSphere();
 
     sun_direction_ = glm::normalize(light_position_ - glm::vec3(0.0f, 0.0f, 0.0f));
     sun_color_ = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -281,13 +286,38 @@ void Render::CreateDefaultTexture()
         glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
         textures_map_["default_red"] = texture;
     }
+
+    textures_map_["uvgrid"] = Tool::LoadTexture("assets/textures/uvgrid.jpg");
 }
 
 void Render::CreateCube()
 {
     auto cube = make_shared<Cube>();
-    cube->Init(textures_map_["default_red"]);
+    cube->Init();
+    Texture texture;
+    texture.id = textures_map_["uvgrid"];
+    texture.type = "texture_diffuse";
+    texture.path = "";
+    std::vector<Texture> textures;
+    textures.push_back(texture);
+    cube->SetTextures(textures);
+
     meshes_map_["cube"] = cube;
+}
+
+void Render::CreateSphere()
+{
+    auto sphere = make_shared<Sphere>();
+    sphere->Init();
+    Texture texture;
+    texture.id = textures_map_["uvgrid"];
+    texture.type = "texture_diffuse";
+    texture.path = "";
+    std::vector<Texture> textures;
+    textures.push_back(texture);
+    sphere->SetTextures(textures);
+
+    meshes_map_["sphere"] = sphere;
 }
 
 uint32_t Render::GetTexture(const std::string &path)

@@ -22,7 +22,6 @@ void App::Init()
 {
     InitWSI();
 
-    // render_ = std::make_shared<Render>();
     auto &render = Render::GetInstance();
     render.Init(width_, height_);
 
@@ -45,9 +44,6 @@ void App::InitWSI()
     {
         throw std::runtime_error("window crete failed.");
     }
-
-    // SDL_SetWindowGammaRamp(window_.get(), nullptr, nullptr, nullptr);
-    SDL_SetWindowBrightness(window_.get(), 0.0f);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
