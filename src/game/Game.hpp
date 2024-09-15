@@ -15,6 +15,7 @@ class Primitive;
 class IMesh;
 class Render;
 class Shield;
+class Skybox;
 
 class Game
 {
@@ -59,4 +60,5 @@ class Game
     std::shared_ptr<ActorSkeletalIndirectLod> arrow_;
     std::shared_ptr<Actor> house_;
     std::shared_ptr<ActorIndirect> cube_;
+    std::shared_ptr<Skybox> skybox_;
 };

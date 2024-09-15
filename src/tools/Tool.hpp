@@ -7,7 +7,8 @@
 class Tool
 {
   public:
-    static int LoadTexture(std::string path);
+    static uint32_t LoadTexture(const std::string &path);
+    static uint32_t LoadTextureHDR(const std::string &path);
 
     static Tool &GetInstance()
     {

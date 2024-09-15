@@ -9,17 +9,19 @@
 
 class IMesh;
 class Shader;
+class IMaterial;
 
 class Primitive : public IPrimitive
 {
   protected:
     std::shared_ptr<IMesh> mesh_ = nullptr;
     std::shared_ptr<Shader> shader_ = nullptr;
+    std::shared_ptr<IMaterial> material_ = nullptr;
     glm::mat4 transform_ = glm::mat4(1.0f);
 
   public:
     void Init(const std::shared_ptr<IMesh> &mesh, const std::shared_ptr<Shader> &shader,
-              glm::mat4 transform = glm::mat4(1.0f));
+              const std::shared_ptr<IMaterial> &material = nullptr, glm::mat4 transform = glm::mat4(1.0f));
 
     void Draw() override;
 
@@ -51,5 +53,15 @@ class Primitive : public IPrimitive
     [[nodiscard]] std::shared_ptr<IMesh> GetMesh() const
     {
         return mesh_;
+    }
+
+    void SetMaterial(const std::shared_ptr<IMaterial> &material)
+    {
+        material_ = material;
+    }
+
+    [[nodiscard]] std::shared_ptr<IMaterial> GetMaterial() const
+    {
+        return material_;
     }
 };

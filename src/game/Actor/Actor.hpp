@@ -11,6 +11,7 @@
 
 class IModel;
 class IMesh;
+class IMaterial;
 class Shader;
 class Primitive;
 
@@ -47,6 +48,14 @@ class Actor : public IActor
     {
         return transform_;
     };
+    void SetMaterial(const std::shared_ptr<IMaterial> &material)
+    {
+        material_ = material;
+    };
+    [[nodiscard]] std::shared_ptr<IMaterial> GetMaterial() const
+    {
+        return material_;
+    };
 
     std::vector<std::shared_ptr<Primitive>> &GetPrimitives()
     {
@@ -74,6 +83,7 @@ class Actor : public IActor
 
     std::vector<std::shared_ptr<IMesh>> meshes_;
     std::shared_ptr<Shader> shader_ = nullptr;
+    std::shared_ptr<IMaterial> material_ = nullptr;
 
     glm::mat4 transform_{1.0f};
 

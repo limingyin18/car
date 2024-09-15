@@ -199,6 +199,13 @@ void Render::Init(uint32_t width, uint32_t height)
 
     InitShaders();
     CreateUBO();
+
+    spdlog::debug("Create equirectangular to cubemap");
+    equirectangular2Cubemap_ = make_shared<Equirectangular2Cubemap>();
+    equirectangular2Cubemap_->Init(shaders_map_["equirectangular2cubemap"],
+                                   GetTextureHDR("assets/textures/hdr/newport_loft.hdr"), 512, 512, meshes_map_["cube"]);
+
+    spdlog::debug("Render Init finish");
 }
 
 void Render::Draw(const std::vector<std::shared_ptr<Primitive>> &primitives)
@@ -269,6 +276,7 @@ void Render::UpdateUBO()
 
 void Render::CreateDefaultTexture()
 {
+    spdlog::debug("CreateDefaultTexture");
     {
         uint32_t texture;
         glCreateTextures(GL_TEXTURE_2D, 1, &texture);
@@ -308,7 +316,7 @@ void Render::CreateCube()
 void Render::CreateSphere()
 {
     auto sphere = make_shared<Sphere>();
-    sphere->Init();
+    sphere->Init(360, 180, 0.5f);
     Texture texture;
     texture.id = textures_map_["uvgrid"];
     texture.type = "texture_diffuse";
@@ -330,6 +338,20 @@ uint32_t Render::GetTexture(const std::string &path)
     else
     {
         textures_map_[path] = Tool::LoadTexture(path);
+        return textures_map_[path];
+    }
+}
+
+uint32_t Render::GetTextureHDR(const std::string &path)
+{
+    auto it = textures_map_.find(path);
+    if (it != textures_map_.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        textures_map_[path] = Tool::LoadTextureHDR(path);
         return textures_map_[path];
     }
 }

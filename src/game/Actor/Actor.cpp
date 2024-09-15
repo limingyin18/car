@@ -41,7 +41,7 @@ void Actor::CreatePrimitives()
     for (auto &mesh : meshes_)
     {
         auto primitive = make_shared<Primitive>();
-        primitive->Init(mesh, shader_, transform_);
+        primitive->Init(mesh, shader_, material_, transform_);
         primitives_.push_back(primitive);
     }
 }

@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "Camera/Camera.hpp"
+#include "Equirectangular2Cubemap.hpp"
 #include "Primitive/Primitive.hpp"
 #include "SSAO.hpp"
 #include "Shader/Shader.hpp"
@@ -54,6 +55,12 @@ class Render
         return meshes_map_;
     }
     uint32_t GetTexture(const std::string &path);
+    uint32_t GetTextureHDR(const std::string &path);
+
+    [[nodiscard]] uint32_t GetEnvCubemap() const
+    {
+        return equirectangular2Cubemap_->GetEnvCubemap();
+    }
 
   private:
     Render();
@@ -122,4 +129,6 @@ class Render
     uint32_t test_fbo_ = -1;
     uint32_t test_dpeth_texture_ = -1;
     uint32_t test_color_texture = -1;
+
+    std::shared_ptr<Equirectangular2Cubemap> equirectangular2Cubemap_;
 };

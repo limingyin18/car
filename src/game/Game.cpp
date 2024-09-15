@@ -5,8 +5,10 @@
 #include "Actor/ActorSkeletalIndirect.hpp"
 #include "Actor/ActorSkeletalIndirectLod.hpp"
 #include "Actor/ActorSkeletalInstance.hpp"
+#include "Skybox.hpp"
 #include "glm/trigonometric.hpp"
 #include "render/Render.hpp"
+
 
 #include <cstdint>
 #include <memory>
@@ -17,6 +19,9 @@ void Game::Init()
     spdlog::debug("Game Init");
 
     TestBasicGeometry();
+
+    skybox_ = std::make_shared<Skybox>();
+    actors_.push_back(skybox_);
 
     for (auto &actor : actors_)
     {

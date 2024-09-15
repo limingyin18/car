@@ -8,17 +8,17 @@
 
 using namespace std;
 
-void Sphere::Init(uint32_t lat, uint32_t lng)
+void Sphere::Init(uint32_t lat, uint32_t lng, float radius)
 {
-    const float radius = 1.0f;
+    radius_ = radius;
 
     std::vector<Vertex> vertices;
     vertices.reserve((lat + 1) * (lng + 1));
     for (uint32_t i = 0; i <= lat; ++i)
     {
         float angLat = numbers::pi / 2.f - i * numbers::pi / lat; // starting from pi/2 to -pi/2
-        float xy = radius * cosf(angLat);                         // r * cos(u)
-        float z = radius * sinf(angLat);                          // r * sin(u)
+        float xy = radius_ * cosf(angLat);                        // r * cos(u)
+        float z = radius_ * sinf(angLat);                         // r * sin(u)
 
         // add (sectorCount+1) vertices per stack
         // the first and last vertices have same position and normal, but different tex coords
@@ -31,9 +31,9 @@ void Sphere::Init(uint32_t lat, uint32_t lng)
             float y = xy * sinf(angLng); // r * cos(u) * sin(v)
 
             // normalized vertex normal (nx, ny, nz)
-            float nx = x / radius;
-            float ny = y / radius;
-            float nz = z / radius;
+            float nx = x / radius_;
+            float ny = y / radius_;
+            float nz = z / radius_;
 
             // vertex tex coord (s, t) range between [0, 1]
             float s = (float)j / lng;
