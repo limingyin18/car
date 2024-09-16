@@ -5,12 +5,16 @@
 #include <string>
 #include <unordered_map>
 
+#include "Brdf.hpp"
 #include "Camera/Camera.hpp"
+#include "ConvolutionCubemap.hpp"
 #include "Equirectangular2Cubemap.hpp"
+#include "Prefiltering.hpp"
 #include "Primitive/Primitive.hpp"
 #include "SSAO.hpp"
 #include "Shader/Shader.hpp"
 #include "ShadowMap.hpp"
+
 
 struct UBOCamera
 {
@@ -59,7 +63,19 @@ class Render
 
     [[nodiscard]] uint32_t GetEnvCubemap() const
     {
-        return equirectangular2Cubemap_->GetEnvCubemap();
+        return equirectangular_cubemap_->GetEnvCubemap();
+    }
+    [[nodiscard]] uint32_t GetConvolutionCubemap() const
+    {
+        return convolution_cubemap_->GetIrradianceMap();
+    }
+    [[nodiscard]] uint32_t GetPrefilterCubemap() const
+    {
+        return prefilter_cubemap_->GetPrefilterMap();
+    }
+    [[nodiscard]] uint32_t GetBRDF() const
+    {
+        return brdf_->GetBRDF();
     }
 
   private:
@@ -130,5 +146,8 @@ class Render
     uint32_t test_dpeth_texture_ = -1;
     uint32_t test_color_texture = -1;
 
-    std::shared_ptr<Equirectangular2Cubemap> equirectangular2Cubemap_;
+    std::shared_ptr<Equirectangular2Cubemap> equirectangular_cubemap_;
+    std::shared_ptr<ConvolutionCubeMap> convolution_cubemap_;
+    std::shared_ptr<Prefiltering> prefilter_cubemap_;
+    std::shared_ptr<Brdf> brdf_;
 };

@@ -1,8 +1,11 @@
 #include "Render.hpp"
 
+#include "ConvolutionCubemap.hpp"
+#include "Prefiltering.hpp"
 #include "Primitive/PrimitiveIndirect.hpp"
 #include "assimp/ModelSkeletal.hpp"
 #include "glad/glad.h"
+#include "render/Brdf.hpp"
 #include "tools/Tool.hpp"
 
 #include "assimp/Model.hpp"
@@ -166,6 +169,7 @@ void Render::Init(uint32_t width, uint32_t height)
     width_ = width;
     height_ = height;
 
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -200,16 +204,28 @@ void Render::Init(uint32_t width, uint32_t height)
     InitShaders();
     CreateUBO();
 
-    spdlog::debug("Create equirectangular to cubemap");
-    equirectangular2Cubemap_ = make_shared<Equirectangular2Cubemap>();
-    equirectangular2Cubemap_->Init(shaders_map_["equirectangular2cubemap"],
-                                   GetTextureHDR("assets/textures/hdr/newport_loft.hdr"), 512, 512, meshes_map_["cube"]);
+    equirectangular_cubemap_ = make_shared<Equirectangular2Cubemap>();
+    equirectangular_cubemap_->Init(shaders_map_["equirectangular2cubemap"],
+                                   GetTextureHDR("assets/textures/hdr/newport_loft.hdr"), 512, 512,
+                                   meshes_map_["cube"]);
+
+    convolution_cubemap_ = make_shared<ConvolutionCubeMap>();
+    convolution_cubemap_->Init(shaders_map_["convolution_cubemap"], equirectangular_cubemap_->GetEnvCubemap(),
+                               meshes_map_["cube"]);
+
+    prefilter_cubemap_ = make_shared<Prefiltering>();
+    prefilter_cubemap_->Init(shaders_map_["prefiltering"], equirectangular_cubemap_->GetEnvCubemap(),
+                             meshes_map_["cube"]);
+
+    brdf_ = make_shared<Brdf>();
+    brdf_->Init();
 
     spdlog::debug("Render Init finish");
 }
 
 void Render::Draw(const std::vector<std::shared_ptr<Primitive>> &primitives)
 {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera_->LookAt();

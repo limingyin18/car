@@ -54,6 +54,15 @@ void Game::TestBasicGeometry()
                 material->SetFloat("metallic", x / 10.0f);
                 material->SetFloat("roughness", y / 10.0f);
                 material->SetFloat("ao", 1.0f);
+
+                Texture texture;
+                texture.id = render.GetConvolutionCubemap();
+                material->SetTexture(4, texture);
+                texture.id = render.GetPrefilterCubemap();
+                material->SetTexture(5, texture);
+                texture.id = render.GetBRDF();
+                material->SetTexture(6, texture);
+
                 sphere->SetMaterial(material);
                 glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3{x, y, 0.0f});
                 sphere->SetTransform(transform);

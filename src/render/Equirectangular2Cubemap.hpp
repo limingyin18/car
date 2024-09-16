@@ -1,10 +1,10 @@
 #pragma once
 
-#include "render/Mesh/IMesh.hpp"
 #include <cstdint>
 #include <memory>
 
 class Shader;
+class IMesh;
 
 class Equirectangular2Cubemap final
 {
@@ -27,4 +27,5 @@ class Equirectangular2Cubemap final
     uint32_t hdrTexture_ = -1;
 
     std::shared_ptr<IMesh> cubeMesh_ = nullptr;
+
 };

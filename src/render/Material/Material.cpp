@@ -42,7 +42,7 @@ void Material::SetMat4(const std::string &name, const glm::mat4 &value)
     uniform_mat4s_[name] = value;
 }
 
-void Material::AddTexture(const Texture &texture)
+void Material::SetTexture(uint32_t binding, const Texture &texture)
 {
-    textures_.push_back(texture);
+    textures_[binding] = texture;
 }

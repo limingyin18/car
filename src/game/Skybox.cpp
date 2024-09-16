@@ -18,7 +18,8 @@ void Skybox::Init()
     Texture texture;
     // texture.id = render.GetTextureHDR("assets/textures/hdr/newport_loft.hdr");
     texture.id = render.GetEnvCubemap();
-    material_->AddTexture(texture);
+    // texture.id = render.GetPrefilterCubemap();
+    material_->SetTexture(0, texture);
 
     Camera &camera = *render.GetCamera();
     glm::mat4 view = glm::mat4(glm::mat3(camera.GetView()));
