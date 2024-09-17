@@ -2,6 +2,7 @@
 
 #include "render/Mesh/Mesh.hpp"
 #include "render/Mesh/Vertex.hpp"
+#include "Tool.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -12,7 +13,7 @@ void Sphere::Init(uint32_t lat, uint32_t lng, float radius)
 {
     radius_ = radius;
 
-    std::vector<Vertex> vertices;
+    std::vector<VertexNormalMap> vertices;
     vertices.reserve((lat + 1) * (lng + 1));
     for (uint32_t i = 0; i <= lat; ++i)
     {
@@ -76,5 +77,6 @@ void Sphere::Init(uint32_t lat, uint32_t lng, float radius)
         }
     }
 
-    Mesh::Init(vertices, indices);
+    graphics::CalculateTangent(vertices, indices);
+    MeshTBN::Init(vertices, indices);
 }

@@ -24,7 +24,7 @@ void Prefiltering::Init(const std::shared_ptr<Shader> &shader, uint32_t envCubem
     glNamedFramebufferDrawBuffers(fbo_, attachments.size(), attachments.data());
 
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &prefilterMap_);
-    glTextureStorage2D(prefilterMap_, 5, GL_RGB16F, width_, height_);
+    glTextureStorage2D(prefilterMap_, 5, GL_RGB32F, width_, height_);
 
     glTextureParameteri(prefilterMap_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(prefilterMap_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

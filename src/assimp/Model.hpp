@@ -4,7 +4,7 @@
 
 #include <assimp/scene.h>
 
-class Vertex;
+class VertexNormalMap;
 class Texture;
 class aiMesh;
 class aiNode;
@@ -40,5 +40,5 @@ class Model : public IModel
     std::unique_ptr<Assimp::Importer> importer;
     std::vector<std::shared_ptr<IMesh>> meshes_;
     std::string directory_;
-    void ProcessVertex(aiMesh *mesh, uint32_t index, Vertex &vertex);
+    void ProcessVertex(aiMesh *mesh, uint32_t index, VertexNormalMap &vertex);
 };

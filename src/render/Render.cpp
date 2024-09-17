@@ -206,7 +206,7 @@ void Render::Init(uint32_t width, uint32_t height)
 
     equirectangular_cubemap_ = make_shared<Equirectangular2Cubemap>();
     equirectangular_cubemap_->Init(shaders_map_["equirectangular2cubemap"],
-                                   GetTextureHDR("assets/textures/hdr/newport_loft.hdr"), 512, 512,
+                                   GetTextureHDR("assets/textures/hdr/meadow_2_2k.hdr"), 512, 512,
                                    meshes_map_["cube"]);
 
     convolution_cubemap_ = make_shared<ConvolutionCubeMap>();

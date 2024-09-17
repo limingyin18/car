@@ -65,7 +65,7 @@ uint32_t Tool::LoadTextureHDR(const std::string &path)
     if (data)
     {
         glCreateTextures(GL_TEXTURE_2D, 1, &hdrTexture);
-        glTextureStorage2D(hdrTexture, 1, GL_RGB16F, width, height);
+        glTextureStorage2D(hdrTexture, 1, GL_RGB32F, width, height);
         glTextureSubImage2D(hdrTexture, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, data);
         glGenerateTextureMipmap(hdrTexture);
 

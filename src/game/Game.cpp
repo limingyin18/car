@@ -7,8 +7,9 @@
 #include "Actor/ActorSkeletalInstance.hpp"
 #include "Skybox.hpp"
 #include "glm/trigonometric.hpp"
+#include "render/Material/Material.hpp"
+#include "render/Mesh/Vertex.hpp"
 #include "render/Render.hpp"
-
 
 #include <cstdint>
 #include <memory>
@@ -18,7 +19,9 @@ void Game::Init()
 {
     spdlog::debug("Game Init");
 
-    TestBasicGeometry();
+    // TestBasicGeometry();
+    InitShields();
+    InitHouse();
 
     skybox_ = std::make_shared<Skybox>();
     actors_.push_back(skybox_);
@@ -137,8 +140,22 @@ void Game::InitHouse()
     auto &meshes_map = render.GetMeshesMap();
 
     house_ = std::make_shared<Actor>();
-    house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
-    house_->SetShader(shaders_map["phong"]);
+    // house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
+    house_->SetModelPath("assets/ABeautifulGame/glTF/ABeautifulGame.gltf");
+    house_->SetShader(shaders_map["pbr"]);
+
+    Texture texture;
+    texture.id = render.GetConvolutionCubemap();
+    auto material = std::make_shared<Material>();
+    material->SetTexture(3, texture);
+    texture.id = render.GetPrefilterCubemap();
+    material->SetTexture(4, texture);
+    texture.id = render.GetBRDF();
+    material->SetTexture(5, texture);
+    house_->SetMaterial(material);
+
+    house_->SetTransform(glm::scale(glm::mat4(1.0f), glm::vec3(10.f, 10.f, 10.f)));
+
     actors_.push_back(house_);
 }
 

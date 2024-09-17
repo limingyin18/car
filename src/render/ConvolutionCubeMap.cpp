@@ -37,7 +37,7 @@ void ConvolutionCubeMap::Init(const std::shared_ptr<Shader> &shader, uint32_t en
 
     // 6 faces
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &irradienceMap_);
-    glTextureStorage2D(irradienceMap_, 1, GL_RGB16F, width_, height_);
+    glTextureStorage2D(irradienceMap_, 1, GL_RGB32F, width_, height_);
     glTextureParameteri(irradienceMap_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(irradienceMap_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTextureParameteri(irradienceMap_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);

@@ -41,11 +41,11 @@ void Equirectangular2Cubemap::Init(const std::shared_ptr<Shader> &equirectangula
     // 6 faces
     uint32_t levels = 1 + floor(log2(max(width_, height_)));
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &envCubemap_);
-    glTextureStorage2D(envCubemap_, levels, GL_RGB16F, width_, height_);
+    glTextureStorage2D(envCubemap_, levels, GL_RGB32F, width_, height_);
     glTextureParameteri(envCubemap_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(envCubemap_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTextureParameteri(envCubemap_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(envCubemap_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(envCubemap_, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTextureParameteri(envCubemap_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     GLenum status = glCheckNamedFramebufferStatus(fbo_, GL_FRAMEBUFFER);

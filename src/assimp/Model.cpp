@@ -1,11 +1,11 @@
 #include "Model.hpp"
 #include "assimp/helper.hpp"
+#include "assimp/material.h"
 #include "helper.hpp"
-#include "render/Mesh/Mesh.hpp"
+#include "render/Mesh/MeshTBN.hpp"
 #include "render/Mesh/Vertex.hpp"
 #include "render/Render.hpp"
 #include "tools/Tool.hpp"
-
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -75,7 +75,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
 
 std::shared_ptr<IMesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
 {
-    std::vector<Vertex> vertices;
+    std::vector<VertexNormalMap> vertices;
     vertices.reserve(mesh->mNumVertices);
     std::vector<unsigned int> indices;
     indices.reserve(mesh->mNumFaces * 3);
@@ -83,7 +83,7 @@ std::shared_ptr<IMesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
-        Vertex vertex;
+        VertexNormalMap vertex;
 
         // 处理顶点位置、法线和纹理坐标
         ProcessVertex(mesh, i, vertex);
@@ -102,22 +102,27 @@ std::shared_ptr<IMesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
     if (mesh->mMaterialIndex >= 0)
     {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 
+        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+
+        std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
         // vector<Texture> emissiveMaps = loadMaterialTextures(material, aiTextureType_EMISSIVE, "texture_emissive");
         // textures.insert(textures.end(), emissiveMaps.begin(), emissiveMaps.end());
     }
 
-    std::shared_ptr<Mesh> _mesh = std::make_shared<Mesh>();
+    std::shared_ptr<MeshTBN> _mesh = std::make_shared<MeshTBN>();
     _mesh->Init(vertices, indices, textures);
     _mesh->SetAABBMin(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMin));
     _mesh->SetAABBMax(AssimpGLMHelpers::GetGLMVec(mesh->mAABB.mMax));
     return _mesh;
 }
-void Model::ProcessVertex(aiMesh *mesh, uint32_t index, Vertex &vertex)
+void Model::ProcessVertex(aiMesh *mesh, uint32_t index, VertexNormalMap &vertex)
 {
     // 顶点位置
     vertex.position_ = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[index]);
@@ -133,6 +138,18 @@ void Model::ProcessVertex(aiMesh *mesh, uint32_t index, Vertex &vertex)
     else
     {
         vertex.uv_ = glm::vec2(0.0f, 0.0f);
+    }
+
+    // tangent
+    if (mesh->mTangents != nullptr)
+    {
+        vertex.tangent_ = AssimpGLMHelpers::GetGLMVec(mesh->mTangents[index]);
+    }
+
+    // bitangent
+    if (mesh->mBitangents != nullptr)
+    {
+        vertex.bitangent_ = AssimpGLMHelpers::GetGLMVec(mesh->mBitangents[index]);
     }
 }
 

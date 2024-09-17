@@ -21,9 +21,9 @@ void Material::Use(const std::shared_ptr<Shader> shader)
         shader->setMat4(name, value);
     }
 
-    for (size_t i = 0; i < textures_.size(); ++i)
+    for (auto &[name, value] : textures_)
     {
-        glBindTextureUnit(i, textures_[i].id);
+        glBindTextureUnit(name, textures_[name].id);
     }
 }
 
