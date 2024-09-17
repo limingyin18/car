@@ -154,7 +154,7 @@ void Game::InitHouse()
     material->SetTexture(5, texture);
     house_->SetMaterial(material);
 
-    house_->SetTransform(glm::scale(glm::mat4(1.0f), glm::vec3(10.f, 10.f, 10.f)));
+    // house_->SetTransform(glm::scale(glm::mat4(1.0f), glm::vec3(10.f, 10.f, 10.f)));
 
     actors_.push_back(house_);
 }
