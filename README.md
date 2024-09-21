@@ -1,5 +1,5 @@
 # car
-
+[![CMake on multiple platforms](https://github.com/limingyin18/car/actions/workflows/cmake-multi-platform.yml/badge.svg)](https://github.com/limingyin18/car/actions/workflows/cmake-multi-platform.yml)
 ## Build
 mkdir build  
 cd build  
