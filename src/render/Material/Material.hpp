@@ -13,10 +13,10 @@ class Texture;
 class Material : public IMaterial
 {
   protected:
-    std::unordered_map<std::string, float> uniform_floats_{};
-    std::unordered_map<std::string, glm::vec3> uniform_vec3s_{};
-    std::unordered_map<std::string, glm::mat4> uniform_mat4s_{};
-    std::unordered_map<uint32_t, Texture> textures_{};
+    std::unordered_map<std::string, float> uniform_floats_;
+    std::unordered_map<std::string, glm::vec3> uniform_vec3s_;
+    std::unordered_map<std::string, glm::mat4> uniform_mat4s_;
+    std::unordered_map<uint32_t, Texture> textures_;
 
   public:
     void Use(const std::shared_ptr<Shader> shader) override;

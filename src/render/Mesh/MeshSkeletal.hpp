@@ -24,5 +24,5 @@ class MeshSkeletal : public Mesh
     void SetupBuffer() override;
     void SetupVAO() override;
 
-    std::vector<VertexSkeletal> vertices_{};
+    std::vector<VertexSkeletal> vertices_;
 };

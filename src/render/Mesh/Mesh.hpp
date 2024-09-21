@@ -83,9 +83,9 @@ class Mesh : public IMesh
     }
 
   protected:
-    std::vector<Vertex> vertices_{};
-    std::vector<uint32_t> indices_{};
-    std::vector<Texture> textures_{};
+    std::vector<Vertex> vertices_;
+    std::vector<uint32_t> indices_;
+    std::vector<Texture> textures_;
 
     glm::vec3 aabb_min_{0.0f};
     glm::vec3 aabb_max_{0.0f};
