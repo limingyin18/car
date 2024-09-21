@@ -8,7 +8,7 @@
 #include "Brdf.hpp"
 #include "Camera/Camera.hpp"
 #include "Equirectangular2Cubemap.hpp"
-#include "ConvolutionCubemap.hpp"
+#include "ConvolutionCubeMap.hpp"
 #include "Prefiltering.hpp"
 #include "Primitive/Primitive.hpp"
 #include "SSAO.hpp"

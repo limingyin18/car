@@ -1,6 +1,6 @@
 #include "Render.hpp"
 
-#include "ConvolutionCubemap.hpp"
+#include "ConvolutionCubeMap.hpp"
 #include "Prefiltering.hpp"
 #include "Primitive/PrimitiveIndirect.hpp"
 #include "Primitive/PrimitiveSkeletalIndirect.hpp"
