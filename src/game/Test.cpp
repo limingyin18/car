@@ -19,28 +19,8 @@ void Game::TestBasicGeometry()
     auto &shaders_map = render.GetShadersMap();
     auto &meshes_map = render.GetMeshesMap();
 
-    if (false)
+    if (true)
     {
-        auto cube = std::make_shared<Actor>();
-        cube->AddMesh(meshes_map["cube"]);
-        cube->SetShader(shaders_map["equirectangular2cubemap"]);
-        auto &textures = meshes_map["cube"]->GetTextures();
-        textures[0].id = render.GetTexture("assets/textures/hdr/newport_loft.hdr");
-        actors_.push_back(cube);
-    }
-
-    if (false)
-    {
-        auto &textures = meshes_map["sphere"]->GetTextures();
-        textures[0].id = render.GetTexture("assets/textures/sphere/rustediron2_basecolor.png");
-        // textures.push_back(texture);
-        Texture texture;
-        texture.id = render.GetTexture("assets/textures/sphere/rustediron2_normal.png");
-        textures.push_back(texture);
-        texture.id = render.GetTexture("assets/textures/sphere/rustediron2_metallic.png");
-        textures.push_back(texture);
-        texture.id = render.GetTexture("assets/textures/sphere/rustediron2_roughness.png");
-        textures.push_back(texture);
         for (size_t i = 0; i < 10; i++)
         {
             for (size_t j = 0; j < 10; j++)
@@ -71,35 +51,5 @@ void Game::TestBasicGeometry()
                 actors_.push_back(sphere);
             }
         }
-    }
-
-    if (true)
-    {
-        auto &textures = meshes_map["sphere"]->GetTextures();
-        textures[0].id = render.GetTexture("assets/textures/sphere/rustediron2_basecolor.png");
-        // textures.push_back(texture);
-        Texture texture;
-        texture.id = render.GetTexture("assets/textures/sphere/rustediron2_normal.png");
-        textures.push_back(texture);
-        texture.id = render.GetTexture("assets/textures/sphere/rustediron2_metallic.png");
-        textures.push_back(texture);
-        texture.id = render.GetTexture("assets/textures/sphere/rustediron2_roughness.png");
-        textures.push_back(texture);
-
-        auto sphere = std::make_shared<Actor>();
-        sphere->AddMesh(meshes_map["sphere"]);
-        sphere->SetShader(shaders_map["pbr"]);
-        auto material = std::make_shared<Material>();
-        material->SetFloat("ao", 1.0f);
-
-        texture.id = render.GetConvolutionCubemap();
-        material->SetTexture(4, texture);
-        texture.id = render.GetPrefilterCubemap();
-        material->SetTexture(5, texture);
-        texture.id = render.GetBRDF();
-        material->SetTexture(6, texture);
-
-        sphere->SetMaterial(material);
-        actors_.push_back(sphere);
     }
 }

@@ -21,7 +21,9 @@ void Game::Init()
 
     // TestBasicGeometry();
     InitShields();
-    InitHouse();
+    // InitArrows();
+    // InitHouse();
+    InitPlane();
 
     skybox_ = std::make_shared<Skybox>();
     actors_.push_back(skybox_);
@@ -34,14 +36,20 @@ void Game::Init()
 
 void Game::Update()
 {
-    if (index == 1)
-    {
-        auto &transforms = shield_->GetInstanceTransforms();
-        for (auto &transform : transforms)
-        {
-            transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.5f * 0.016f));
-        }
-    }
+    // if (index == 1)
+    // {
+    //     auto &transforms = shield_->GetInstanceTransforms();
+    //     for (auto &transform : transforms)
+    //     {
+    //         transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.5f * 0.016f));
+    //     }
+
+    //     auto &transforms_arrow = arrow_->GetInstanceTransforms();
+    //     for (auto &transform : transforms_arrow)
+    //     {
+    //         transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.5f * 0.016f));
+    //     }
+    // }
     for (auto &actor : actors_)
     {
         actor->Update();
@@ -53,7 +61,7 @@ void Game::SwitchAnimation()
     index = (index + 1) % shield_->GetAnimationCount();
     shield_->SwitchAnimation(index);
 
-    arrow_->SwitchAnimation(index);
+    // arrow_->SwitchAnimation(index);
 }
 
 std::vector<std::shared_ptr<Primitive>> Game::GetPrimitives() const
@@ -73,7 +81,7 @@ void Game::InitShields()
     auto &shaders_map = render.GetShadersMap();
     auto &meshes_map = render.GetMeshesMap();
 
-    uint32_t instance_count = 10;
+    uint32_t instance_count = 100;
     std::vector<glm::mat4> instance_transforms(instance_count * instance_count);
     for (uint32_t i = 0; i < instance_count; i++)
     {
@@ -106,7 +114,7 @@ void Game::InitArrows()
     auto &shaders_map = render.GetShadersMap();
     auto &meshes_map = render.GetMeshesMap();
 
-    uint32_t instance_count = 10;
+    uint32_t instance_count = 50;
     std::vector<glm::mat4> instance_transforms(instance_count * instance_count);
     for (uint32_t i = 0; i < instance_count; i++)
     {
@@ -140,8 +148,8 @@ void Game::InitHouse()
     auto &meshes_map = render.GetMeshesMap();
 
     house_ = std::make_shared<Actor>();
-    // house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
-    house_->SetModelPath("assets/ABeautifulGame/glTF/ABeautifulGame.gltf");
+    house_->SetModelPath("assets/Sponza/glTF/Sponza.gltf");
+    // house_->SetModelPath("assets/ABeautifulGame/glTF/ABeautifulGame.gltf");
     house_->SetShader(shaders_map["pbr"]);
 
     Texture texture;
@@ -153,8 +161,7 @@ void Game::InitHouse()
     texture.id = render.GetBRDF();
     material->SetTexture(5, texture);
     house_->SetMaterial(material);
-
-    // house_->SetTransform(glm::scale(glm::mat4(1.0f), glm::vec3(10.f, 10.f, 10.f)));
+    // house_->SetTransform(glm::scale(glm::mat4(1.0f), glm::vec3(10.f)));
 
     actors_.push_back(house_);
 }
@@ -185,4 +192,27 @@ void Game::InitCubes()
     cube_->SetShaderCulling(shaders_map["culling"]);
     cube_->SetInstanceTransforms(instance_transforms);
     actors_.push_back(cube_);
+}
+
+void Game::InitPlane()
+{
+    auto &render = Render::GetInstance();
+    auto &shaders_map = render.GetShadersMap();
+    auto &meshes_map = render.GetMeshesMap();
+
+    plane_ = std::make_shared<Actor>();
+    plane_->AddMesh(meshes_map["plane"]);
+    plane_->SetShader(shaders_map["phong"]);
+
+    auto material = std::make_shared<Material>();
+
+    Texture texture;
+    texture.id = render.GetTexture("default_yellow1");
+    material->SetTexture(0, texture);
+    material->SetFloat("ambientStrength", 0.0f);
+    plane_->SetMaterial(material);
+
+    plane_->SetTransform(glm::scale(glm::mat4(1.0f), glm::vec3(1000.f)));
+
+    actors_.push_back(plane_);
 }

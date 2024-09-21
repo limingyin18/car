@@ -19,6 +19,14 @@ layout(std140, binding = 1) uniform Enviroment
     vec3 lightDir;
 };
 
+layout(std140, binding = 2) uniform LightSpaceMatrices
+{
+    mat4 lightSpaceMatrices[16];
+};
+uniform float cascadePlaneDistances[16];
+uniform int cascadeCount; // number of frusta - 1
+uniform mat4 lightSpaceMatrix;
+
 layout(binding = 0) uniform sampler2D albedoMap;
 layout(binding = 1) uniform sampler2D normalMap;
 layout(binding = 2) uniform sampler2D ormMap;
@@ -26,11 +34,15 @@ layout(binding = 3) uniform samplerCube irradianceMap;
 layout(binding = 4) uniform samplerCube prefilterMap;
 layout(binding = 5) uniform sampler2D brdfLUT;
 
+layout(binding = 6) uniform sampler2DArray shadowMap;
+// layout(binding = 6) uniform sampler2D shadowMap;
+
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
 float DistributionGGX(vec3 N, vec3 H, float roughness);
 float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
+float ShadowCalculation(vec3 fragPosWorldSpace);
 
 const float PI = 3.14159265359;
 
@@ -40,7 +52,7 @@ void main()
 {
     vec3 albedo = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2f));
     vec3 normal = getNormalFromNormalMap();
-    float ao = texture(ormMap, TexCoords).r;
+    float ao = 1-texture(ormMap, TexCoords).r;
     float roughness = texture(ormMap, TexCoords).g;
     float metallic = texture(ormMap, TexCoords).b;
 
@@ -84,7 +96,10 @@ void main()
 
     vec3 ambient = (kD * diffuse + specular) * ao;
 
-    vec3 color = ambient + Lo;
+    float shadow = ShadowCalculation(WorldPos);
+    vec3 color = ambient * max(0.5, 1.0 - shadow)+ Lo * (1.0 - shadow);
+    // vec3 color = ambient * max(0.5, 1.0 - shadow);
+    // vec3 color = Lo * (1.0 - ShadowCalculation(WorldPos));
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
 
@@ -141,4 +156,71 @@ vec3 getNormalFromNormalMap()
     norm = norm * 2.0 - 1.0;
     norm = normalize(TBN * norm);
     return norm;
+}
+
+float ShadowCalculation(vec3 fragPosWorldSpace)
+{
+    // select cascade layer
+    vec4 fragPosViewSpace = view * vec4(fragPosWorldSpace, 1.0);
+    float depthValue = abs(fragPosViewSpace.z);
+
+    int layer = -1;
+    for (int i = 0; i < cascadeCount; ++i)
+    {
+        if (depthValue < cascadePlaneDistances[i])
+        {
+            layer = i;
+            break;
+        }
+    }
+    if (layer == -1)
+    {
+        layer = cascadeCount;
+    }
+
+    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);
+
+    // fragPosLightSpace = lightSpaceMatrix * vec4(fragPosWorldSpace, 1.0);
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (currentDepth > 1.0)
+    {
+        return 0.f;
+    }
+    // calculate bias (based on depth map resolution and slope)
+    vec3 normal = normalize(Normal);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    const float biasModifier = 0.5f;
+    if (layer == cascadeCount)
+    {
+        bias *= 1 / (1000 * biasModifier);
+    }
+    else
+    {
+        bias *= 1 / (cascadePlaneDistances[layer] * biasModifier);
+    }
+    // bias = 0.f;
+
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
+            // float pcfDepth = texture(shadowMap, vec2(projCoords.xy + vec2(x, y) * texelSize)).r;
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
 }

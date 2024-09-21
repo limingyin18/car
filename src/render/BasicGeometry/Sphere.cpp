@@ -79,4 +79,5 @@ void Sphere::Init(uint32_t lat, uint32_t lng, float radius)
 
     graphics::CalculateTangent(vertices, indices);
     MeshTBN::Init(vertices, indices);
+
 }

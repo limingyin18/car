@@ -23,17 +23,20 @@ in vec3 FragPos;
 
 out vec4 FragColor;
 
-float specularStrength = 0.5;
+float specularStrength = 1.f;
 
-layout(location = 0) uniform sampler2D ambientTexture;
-layout(location = 1)uniform sampler2DArray shadowMap;
+layout(binding = 0) uniform sampler2D ambientTexture;
 
-layout (std140) uniform LightSpaceMatrices
+layout(binding = 6)uniform sampler2DArray shadowMap;
+
+layout (std140, binding = 2) uniform LightSpaceMatrices
 {
     mat4 lightSpaceMatrices[16];
 };
 uniform float cascadePlaneDistances[16];
 uniform int cascadeCount;   // number of frusta - 1
+
+uniform float ambientStrength = 0.3f;
 
 float ShadowCalculation(vec3 fragPosWorldSpace)
 {
@@ -101,7 +104,6 @@ float ShadowCalculation(vec3 fragPosWorldSpace)
 
 void main()
 {
-    float ambientStrength = 0.3f;
     vec3 ambient = ambientStrength * lightColor;
 
     vec3 norm = normalize(fNormal);
@@ -110,11 +112,11 @@ void main()
 
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * lightColor;
 
     vec3 color = texture(ambientTexture, TexCoord).rgb;
     float shadow = ShadowCalculation(FragPos);    
-    vec3 result = (ambient + (diffuse +specular)) * color;
+    vec3 result = (ambient + (diffuse +specular)*max(0.5f, 1-shadow)) * color;
     FragColor = vec4(result, 1.0);
 }

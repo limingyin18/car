@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include <fstream>
 #include <random>
 #include <string>
@@ -7,6 +9,7 @@
 class Tool
 {
   public:
+    static void PrintGLM(const std::string &name, const glm::mat4 &mat);
     static uint32_t LoadTexture(const std::string &path);
     static uint32_t LoadTextureHDR(const std::string &path);
 

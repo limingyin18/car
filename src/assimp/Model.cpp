@@ -104,9 +104,23 @@ std::shared_ptr<IMesh> Model::processMesh(aiMesh *mesh, const aiScene *scene)
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        if (diffuseMaps.size() == 0)
+        {
+            Texture texture;
+            texture.id = Render::GetInstance().GetTexture("default_white");
+            texture.type = "texture_diffuse";
+            diffuseMaps.push_back(texture);
+        }
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
         std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
+        if (normalMaps.size() == 0)
+        {
+            Texture texture;
+            texture.id = Render::GetInstance().GetTexture("default_normal");
+            texture.type = "texture_normal";
+            normalMaps.push_back(texture);
+        }
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
         std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_METALNESS, "texture_specular");

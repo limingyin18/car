@@ -52,6 +52,7 @@ class Game
     void InitShields();
     void InitArrows();
     void InitCubes();
+    void InitPlane();
 
     std::vector<std::shared_ptr<Actor>> actors_;
 
@@ -59,6 +60,7 @@ class Game
     std::shared_ptr<ActorSkeletalIndirectLod> shield_;
     std::shared_ptr<ActorSkeletalIndirectLod> arrow_;
     std::shared_ptr<Actor> house_;
-    std::shared_ptr<ActorIndirect> cube_;
     std::shared_ptr<Skybox> skybox_;
+    std::shared_ptr<ActorIndirect> cube_;
+    std::shared_ptr<Actor> plane_;
 };

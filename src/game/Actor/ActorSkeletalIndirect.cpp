@@ -10,6 +10,7 @@
 #include "glad/glad.h"
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <string>
 
@@ -100,6 +101,16 @@ void ActorSkeletalIndirect::Update()
         // object_data.animation_clip_ = 0;
         object_data.frame_ = object_data.frame_ + 1;
         object_data.frame_ = object_data.frame_ % (frame_counts_[object_data.animation_clip_] / 10 + 1);
+        int index = object_data.animation_clip_;
+    }
+    for (uint32_t i = 0; i < object_data_.size(); i++)
+    {
+        uint32_t index = object_data_[i].animation_clip_;
+        if (index == 1)
+        {
+            auto &transform = instance_transforms_[i];
+            transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.5f * 0.016f));
+        }
     }
 
     for (size_t i = 0; i < primitives_.size(); i++)
@@ -115,7 +126,8 @@ void ActorSkeletalIndirect::SwitchAnimation(uint32_t index)
 {
     for (size_t i = 0; i < object_data_.size(); i++)
     {
-        // index = std::round(Tool::GetInstance().RandomFloat() * (animations_.size() - 1));
+        index = std::round(Tool::GetInstance().RandomFloat() * (animations_.size() - 1));
+
         object_data_[i].animation_clip_ = index;
         object_data_[i].frame_ = frame_offsets_[i];
         object_data_[i].frame_ = object_data_[i].frame_ % (frame_counts_[object_data_[i].animation_clip_] / 10 + 1);

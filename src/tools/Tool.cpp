@@ -78,3 +78,12 @@ uint32_t Tool::LoadTextureHDR(const std::string &path)
     }
     return hdrTexture;
 }
+
+void Tool::PrintGLM(const std::string &name, const glm::mat4 &mat)
+{
+    spdlog::info(name);
+    for (int i = 0; i < 4; i++)
+    {
+        spdlog::info("{:f} {:f} {:f} {:f}", mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
+    }
+}

@@ -4,6 +4,7 @@
 #include "render/Mesh/Mesh.hpp"
 #include "render/Mesh/Vertex.hpp"
 #include "render/Shader/Shader.hpp"
+#include "tools/Tool.hpp"
 
 #include <cstddef>
 #include <memory>

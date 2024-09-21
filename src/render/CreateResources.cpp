@@ -1,7 +1,9 @@
 #include "Render.hpp"
 
+#include "glad/glad.h"
+#include "tools/Tool.hpp"
+
 #include <spdlog/spdlog.h>
-#include <glad/glad.h>
 
 using namespace std;
 
@@ -11,7 +13,8 @@ void Render::CreateMultisampledFramebuffer()
     glTextureStorage2DMultisample(multisampled_color_buffer_, sample_count_, GL_RGBA16, width_, height_, GL_TRUE);
 
     glCreateTextures(GL_TEXTURE_2D_MULTISAMPLE, 1, &multisampled_depth_buffer_);
-    glTextureStorage2DMultisample(multisampled_depth_buffer_, sample_count_, GL_DEPTH24_STENCIL8, width_, height_, GL_TRUE);
+    glTextureStorage2DMultisample(multisampled_depth_buffer_, sample_count_, GL_DEPTH24_STENCIL8, width_, height_,
+                                  GL_TRUE);
 
     glCreateFramebuffers(1, &multisampled_framebuffer_);
     glNamedFramebufferTexture(multisampled_framebuffer_, GL_COLOR_ATTACHMENT0, multisampled_color_buffer_, 0);
@@ -73,4 +76,63 @@ void Render::CreateTestFramebuffer()
         spdlog::error(status);
         throw runtime_error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
     }
+}
+
+void Render::CreateDefaultTexture()
+{
+    spdlog::debug("CreateDefaultTexture");
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xffffffff;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_white"] = texture;
+    }
+
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xff000000;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_black"] = texture;
+    }
+
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xff0000ff;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_red"] = texture;
+    }
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xffa5d5fa;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_yellow1"] = texture;
+    }
+
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xff00ffff;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_yellow"] = texture;
+    }
+
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xffff0000;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_normal"] = texture;
+    }
+
+    textures_map_["uvgrid"] = Tool::LoadTexture("assets/textures/uvgrid.jpg");
 }

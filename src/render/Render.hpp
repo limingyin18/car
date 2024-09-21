@@ -7,13 +7,14 @@
 
 #include "Brdf.hpp"
 #include "Camera/Camera.hpp"
-#include "ConvolutionCubemap.hpp"
 #include "Equirectangular2Cubemap.hpp"
+#include "ConvolutionCubemap.hpp"
 #include "Prefiltering.hpp"
 #include "Primitive/Primitive.hpp"
 #include "SSAO.hpp"
 #include "Shader/Shader.hpp"
-#include "ShadowMap.hpp"
+#include "render/Shadow/CascadedShadowMap.hpp"
+#include "Shadow/Shadow.hpp"
 
 
 struct UBOCamera
@@ -80,6 +81,8 @@ class Render
 
   private:
     Render();
+    void CreateBasicGeometry();
+    void CreatePlane();
     void CreateCube();
     void CreateSphere();
     void LoadShaders();
@@ -114,7 +117,7 @@ class Render
     // std::shared_ptr<Animation> animation_;
     // std::shared_ptr<Animator> animator_;
 
-    glm::vec3 light_position_ = glm::vec3(10.0f, 150.0f, 10.0f);
+    glm::vec3 light_position_ = glm::vec3(5.0f, 10.0f, 10.0f);
     glm::vec3 sun_direction_;
     glm::vec3 sun_color_;
 
@@ -130,7 +133,8 @@ class Render
 
     glm::mat4 lightSpaceMatrix_;
 
-    std::shared_ptr<ShadowMap> shadow_map_;
+    std::shared_ptr<CascadedShadowMap> shadow_csm_;
+    // std::shared_ptr<Shadow> shadow_;
 
     std::thread compute_thread_;
 

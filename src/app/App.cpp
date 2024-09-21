@@ -35,7 +35,7 @@ void App::InitWSI()
     SDL_Init(SDL_INIT_VIDEO);
     SDL_WindowFlags window_flags{SDL_WINDOW_OPENGL};
     window_ = {SDL_CreateWindow(title_.c_str(), // window title
-                                100, 100,
+                                0, 0,
                                 width_,  // window width in pixels
                                 height_, // window height in pixels
                                 window_flags),
