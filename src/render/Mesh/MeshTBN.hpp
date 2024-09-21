@@ -25,5 +25,5 @@ class MeshTBN : public Mesh
     void SetupBuffer() override;
     void SetupVAO() override;
 
-    std::vector<VertexNormalMap> vertices_{};
+    std::vector<VertexNormalMap> vertices_;
 };
