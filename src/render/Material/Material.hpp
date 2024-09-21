@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 
-class Texture;
+#include "render/Mesh/Vertex.hpp"
 
 class Material : public IMaterial
 {
