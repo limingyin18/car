@@ -1,14 +1,13 @@
 #version 460 core
 
-
-layout(std140, binding = 0) uniform Camera 
+layout(std140, binding = 0) uniform Camera
 {
     mat4 projection;
     mat4 view;
     vec3 viewPos;
 };
 
-layout(std140, binding = 1) uniform Enviroment 
+layout(std140, binding = 1) uniform Enviroment
 {
     vec3 lightColor;
     vec3 lightDir;
@@ -25,15 +24,15 @@ out vec4 FragColor;
 
 float specularStrength = 0.5;
 
-layout(location = 0) uniform sampler2D ambientTexture;
-layout(location = 1)uniform sampler2DArray shadowMap;
+layout(binding = 0) uniform sampler2D ambientTexture;
+layout(binding = 6) uniform sampler2DArray shadowMap;
 
-layout (std140) uniform LightSpaceMatrices
+layout(std140) uniform LightSpaceMatrices
 {
     mat4 lightSpaceMatrices[16];
 };
 uniform float cascadePlaneDistances[16];
-uniform int cascadeCount;   // number of frusta - 1
+uniform int cascadeCount; // number of frusta - 1
 
 float ShadowCalculation(vec3 fragPosWorldSpace)
 {
@@ -86,16 +85,16 @@ float ShadowCalculation(vec3 fragPosWorldSpace)
     // PCF
     float shadow = 0.0;
     vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
-    for(int x = -1; x <= 1; ++x)
+    for (int x = -1; x <= 1; ++x)
     {
-        for(int y = -1; y <= 1; ++y)
+        for (int y = -1; y <= 1; ++y)
         {
             float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
-            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;        
-        }    
+            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+        }
     }
     shadow /= 9.0;
-        
+
     return shadow;
 }
 
@@ -114,7 +113,7 @@ void main()
     vec3 specular = specularStrength * spec * lightColor;
 
     vec3 color = texture(ambientTexture, TexCoord).rgb;
-    float shadow = ShadowCalculation(FragPos);    
-    vec3 result = (ambient + (diffuse +specular)) * color;
+    float shadow = ShadowCalculation(FragPos);
+    vec3 result = (ambient + (diffuse + specular)) * color;
     FragColor = vec4(result, 1.0);
 }

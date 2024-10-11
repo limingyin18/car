@@ -6,5 +6,5 @@
 class Plane : public MeshTBN
 {
   public:
-    void Init(uint32_t n = 2);
+    void Init(uint32_t n = 2, float length = 1.f);
 };

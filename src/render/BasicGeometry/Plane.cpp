@@ -3,7 +3,7 @@
 #include "Tool.hpp"
 #include "render/Mesh/Vertex.hpp"
 
-void Plane::Init(uint32_t n)
+void Plane::Init(uint32_t n, float length)
 {
     assert(n >= 2);
 
@@ -12,10 +12,10 @@ void Plane::Init(uint32_t n)
     std::vector<uint32_t> indices;
     indices.reserve(1 * (n - 1) * 1 * (n - 1));
 
-    const float dx = 1.0f / static_cast<float>(n - 1);
-    const float dz = 1.0f / static_cast<float>(n - 1);
-    const float x0 = -0.5f;
-    const float z0 = -0.5f;
+    const float dx = 1.0f / static_cast<float>(n - 1) * length;
+    const float dz = 1.0f / static_cast<float>(n - 1) * length;
+    const float x0 = -0.5f * length;
+    const float z0 = -0.5f * length;
 
     // top
     {

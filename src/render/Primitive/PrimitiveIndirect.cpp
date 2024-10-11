@@ -11,7 +11,7 @@ void PrimitiveIndirect::Init(const std::shared_ptr<IMesh> &mesh, const std::shar
                              const std::vector<glm::mat4> &instance_transforms)
 {
     shader_culling_ = shader_culling;
-    PrimitiveInstance::Init(mesh, shader, instance_transforms);
+    PrimitiveInstance::Init(mesh, shader, material_, instance_transforms);
     CreateObjectDataBuffer();
     CreateCameraCullingDataBuffer();
     CreateInstanceIDBuffer();
@@ -20,11 +20,6 @@ void PrimitiveIndirect::Init(const std::shared_ptr<IMesh> &mesh, const std::shar
 
 void PrimitiveIndirect::Draw()
 {
-    if (mesh_ == nullptr || shader_ == nullptr)
-    {
-        spdlog::error("Primitive::Draw: mesh or shader is nullptr");
-        return;
-    }
     // culling pass
     {
         camera_culling_data_.view = camera_->GetView();

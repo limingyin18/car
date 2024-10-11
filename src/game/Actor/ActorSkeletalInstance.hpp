@@ -6,5 +6,10 @@
 class ActorSkeletalInstance : public ActorSkeletal, public ActorInstance
 {
   protected:
+    void Update() override
+    {
+        ActorSkeletal::Update();
+        ActorInstance::Update();
+    }
     void CreatePrimitives() override;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Actor/Actor.hpp"
+#include "game/Actor/Actor.hpp"
 
 class Skybox final : public Actor
 {

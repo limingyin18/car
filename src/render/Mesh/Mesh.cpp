@@ -37,7 +37,7 @@ void Mesh::SetupBuffer()
 {
     // create vertex buffer
     glCreateBuffers(1, &vbo_);
-    glNamedBufferStorage(vbo_, vertices_.size() * sizeof(Vertex), vertices_.data(), 0);
+    glNamedBufferStorage(vbo_, vertices_.size() * sizeof(Vertex), vertices_.data(), vbo_flag_);
 
     // create index buffer
     glCreateBuffers(1, &ebo_);
@@ -62,4 +62,14 @@ void Mesh::SetupVAO()
 void Mesh::SetTextures(const std::vector<Texture> &textures)
 {
     textures_ = textures;
+}
+
+void Mesh::UpdateVertices()
+{
+    glNamedBufferSubData(vbo_, 0, vertices_.size() * sizeof(Vertex), vertices_.data());
+}
+
+void Mesh::SetDynamic()
+{
+    vbo_flag_ = GL_DYNAMIC_STORAGE_BIT;
 }

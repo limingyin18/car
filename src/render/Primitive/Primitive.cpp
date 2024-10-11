@@ -11,11 +11,6 @@
 
 void Primitive::Draw()
 {
-    if (mesh_ == nullptr || shader_ == nullptr)
-    {
-        throw std::runtime_error("Primitive::Draw: mesh or shader is nullptr");
-    }
-
     shader_->use();
     shader_->setMat4("model", transform_ * mesh_->GetModel());
 

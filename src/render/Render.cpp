@@ -1,14 +1,18 @@
 #include "Render.hpp"
 
+#include "BasicGeometry/Sphere.hpp"
 #include "ConvolutionCubeMap.hpp"
 #include "Prefiltering.hpp"
 #include "Primitive/PrimitiveIndirect.hpp"
+#include "Primitive/PrimitiveInstance.hpp"
+#include "Primitive/PrimitiveOcean.hpp"
 #include "Primitive/PrimitiveSkeletalIndirect.hpp"
 #include "Shadow/CascadedShadowMap.hpp"
 #include "glad/glad.h"
 #include "render/Brdf.hpp"
 #include "tools/Tool.hpp"
 
+#include <cstdint>
 #include <spdlog/spdlog.h>
 
 #include <filesystem>
@@ -167,11 +171,8 @@ void Render::LoadShaders()
     }
 }
 
-void Render::Init(uint32_t width, uint32_t height)
+void Render::Init()
 {
-    width_ = width;
-    height_ = height;
-
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
@@ -183,7 +184,7 @@ void Render::Init(uint32_t width, uint32_t height)
     glDebugMessageCallback(message_callback, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, width_, height_);
     glClearColor(0.0f, 0.0f, 0.0f, 1.f);
 
     CreateMultisampledFramebuffer();
@@ -192,13 +193,13 @@ void Render::Init(uint32_t width, uint32_t height)
     CreateDefaultTexture();
     CreateBasicGeometry();
 
-    light_position_ = glm::vec3(100.0f, 100.0f, 100.0f);
+    // light_position_ = glm::vec3(10.0f, 100.0f, 10.0f);
     sun_direction_ = glm::normalize(light_position_ - glm::vec3(0.0f, 0.0f, 0.0f));
-    sun_color_ = glm::vec3(1.0f, 1.0f, 1.0f);
+    sun_color_ = glm::vec3(255, 255, 255) / 255.f;
 
     camera_ = make_shared<Camera>();
-    camera_->SetWidth(width);
-    camera_->SetHeight(height);
+    camera_->SetWidth(width_);
+    camera_->SetHeight(height_);
     camera_->SetPosition(glm::vec3(0.0f, 5.0f, 5.0f));
     camera_->SetFront(glm::vec3(0.f, 0.f, 0.f) - camera_->GetPosition());
     camera_->LookAt();
@@ -210,6 +211,9 @@ void Render::Init(uint32_t width, uint32_t height)
 
     // shadow_ = make_shared<Shadow>(shaders_map_["shadow"], light_position_);
     // shadow_->Init();
+
+    picking_ = make_shared<Picking>();
+    picking_->Init(shaders_map_["picking_instance"]);
 
     InitShaders();
     CreateUBO();
@@ -233,7 +237,7 @@ void Render::Init(uint32_t width, uint32_t height)
     spdlog::debug("Render Init finish");
 }
 
-void Render::Draw(const std::vector<std::shared_ptr<Primitive>> &primitives)
+void Render::Draw(const std::vector<std::shared_ptr<IPrimitive>> &primitives)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -250,45 +254,87 @@ void Render::Draw(const std::vector<std::shared_ptr<Primitive>> &primitives)
         }
     }
 
-    // shadow pass
-    {
-        // shadow_map_->Use(*camera_);
-        // auto light_space_matrix = shadow_->GetLightSpaceMatrix();
-        shadow_csm_->Use(*camera_);
+    // // picking pass
+    // if (is_picking_)
+    // {
+    //     picking_->Use(mouse_pos_x, height_ - 1 - mouse_pos_y);
 
-        for (auto &primitive : primitives)
-        {
-            if (std::dynamic_pointer_cast<PrimitiveSkeletalIndirect>(primitive) != nullptr)
-            {
-                auto shader = primitive->GetShader();
-                primitive->SetShader(shadow_csm_->GetShaderSkeletal());
-                // primitive->Draw();
-                primitive->SetShader(shader);
-            }
-        }
+    //     for (uint32_t i = 0; i < primitives.size(); ++i)
+    //     {
+    //         auto &primitive = primitives[i];
+    //         if (dynamic_pointer_cast<Sphere>(primitive->GetMesh()) == nullptr)
+    //         {
+    //             continue;
+    //         }
+    //         picking_->GetShader()->setInt("actorID", i);
+    //         auto shader = primitive->GetShader();
+    //         primitive->SetShader(picking_->GetShader());
+    //         primitive->Draw();
+    //         primitive->SetShader(shader);
+    //     }
+    //     glDisable(GL_SCISSOR_TEST);
+    //     uint32_t index = picking_->Pick();
+    //     if (index != -1)
+    //     {
+    //         selected_id_ = index;
+    //         is_selected_ = true;
 
-        for (auto &primitive : primitives)
-        {
-            auto shader = primitive->GetShader();
-            if (shader == shaders_map_["skybox"])
-            {
-                continue;
-            }
-            if (std::dynamic_pointer_cast<PrimitiveSkeletalIndirect>(primitive) != nullptr)
-            {
-                continue;
-            }
-            primitive->SetShader(shadow_csm_->GetShader());
-            // primitive->Draw();
-            primitive->SetShader(shader);
-            // shader->use();
-            // shader->setMat4("lightSpaceMatrix", light_space_matrix);
-        }
-    }
+    //         spdlog::debug("selected {}", selected_id_);
+    //     }
+    //     else
+    //     {
+    //         is_selected_ = false;
+    //         spdlog::debug("not selected");
+    //     }
+    //     is_picking_ = false;
+    // }
+
+    // // shadow pass
+    // {
+    //     // shadow_map_->Use(*camera_);
+    //     // auto light_space_matrix = shadow_->GetLightSpaceMatrix();
+    //     shadow_csm_->Use(*camera_);
+
+    //     for (auto &primitive : primitives)
+    //     {
+    //         if (std::dynamic_pointer_cast<PrimitiveSkeletalIndirect>(primitive) != nullptr)
+    //         {
+    //             auto shader = primitive->GetShader();
+    //             primitive->SetShader(shadow_csm_->GetShaderSkeletal());
+    //             primitive->Draw();
+    //             primitive->SetShader(shader);
+    //         }
+    //     }
+
+    //     for (auto &primitive : primitives)
+    //     {
+    //         auto shader = primitive->GetShader();
+    //         if (shader == shaders_map_["skybox"])
+    //         {
+    //             continue;
+    //         }
+
+    //         if (std::dynamic_pointer_cast<PrimitiveSkeletalIndirect>(primitive) != nullptr)
+    //         {
+    //             continue;
+    //         }
+
+    //         if (std::dynamic_pointer_cast<PrimitiveOcean>(primitive) != nullptr)
+    //         {
+    //             continue;
+    //         }
+    //         primitive->SetShader(shadow_csm_->GetShader());
+    //         // primitive->Draw();
+    //         primitive->SetShader(shader);
+    //         // shader->use();
+    //         // shader->setMat4("lightSpaceMatrix", light_space_matrix);
+    //     }
+    // }
 
     // normal pass
     {
         glBindFramebuffer(GL_FRAMEBUFFER, multisampled_framebuffer_);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_BACK);
         glViewport(0, 0, width_, height_);
@@ -301,6 +347,38 @@ void Render::Draw(const std::vector<std::shared_ptr<Primitive>> &primitives)
             primitive->Draw();
         }
     }
+
+    // if (is_selected_)
+    // {
+    //     // high light
+    //     auto highlight_shader = shaders_map_["highlight"];
+    //     for (uint32_t i = 0; i < primitives.size(); ++i)
+    //     {
+    //         auto &primitive = primitives[i];
+    //         if (dynamic_pointer_cast<Sphere>(primitive->GetMesh()) == nullptr)
+    //         {
+    //             continue;
+    //         }
+
+    //         float dx = float(mouse_pos_x - mouse_pos_x_last) / width_ * 2.f;
+    //         float dy = float(mouse_pos_y - mouse_pos_y_last) / height_ * 2.f;
+    //         glm::mat4 translate = glm::translate(glm::mat4(1.f), glm::vec3(dx, 0.f, dy));
+
+    //         auto primitive_inst = dynamic_pointer_cast<PrimitiveInstance>(primitive);
+
+    //         highlight_shader->use();
+    //         auto model_matrix = primitive_inst->GetInstanceTransforms()[selected_id_];
+    //         model_matrix = glm::scale(model_matrix, glm::vec3(1.1f));
+    //         model_matrix = translate * model_matrix;
+    //         highlight_shader->setMat4("model", model_matrix);
+    //         primitive->SetTransform(model_matrix);
+    //         auto shader = primitive->GetShader();
+    //         primitive->SetShader(highlight_shader);
+    //         primitive->Primitive::Draw();
+    //         primitive->SetShader(shader);
+    //         primitive->SetTransform(glm::mat4(1.f));
+    //     }
+    // }
 
     // copy to window
     {

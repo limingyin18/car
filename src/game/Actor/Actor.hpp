@@ -57,7 +57,7 @@ class Actor : public IActor
         return material_;
     };
 
-    std::vector<std::shared_ptr<Primitive>> &GetPrimitives()
+    std::vector<std::shared_ptr<IPrimitive>> &GetPrimitives() override
     {
         return primitives_;
     }
@@ -87,5 +87,5 @@ class Actor : public IActor
 
     glm::mat4 transform_{1.0f};
 
-    std::vector<std::shared_ptr<Primitive>> primitives_;
+    std::vector<std::shared_ptr<IPrimitive>> primitives_;
 };

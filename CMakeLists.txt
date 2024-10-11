@@ -12,6 +12,8 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 # set(CMAKE_CXX_COMPILER "clang")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/")
 
+project("car")
+
 
 # add_subdirectory("third_party/glm-1.0.1")
 set(ASSIMP_BUILD_TESTS OFF)
@@ -24,9 +26,25 @@ add_subdirectory("third_party/meshoptimizer-0.21")
 # add_subdirectory("src/engine")
 # add_subdirectory("src/game")
 
-project("car")
+# glad
+add_library(glad "third_party/glad/glad.c")
+target_include_directories(glad PUBLIC "third_party/glad")
+
+# imgui
+set(IMGUI_DIR "third_party/imgui-1.91.2")
+file(GLOB srcImgui "${IMGUI_DIR}/*.cpp")
+add_library(imgui
+    "${srcImgui}"
+    "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp")
+target_include_directories(imgui PUBLIC "${IMGUI_DIR}" "${IMGUI_DIR}/backends")
+target_link_libraries(imgui SDL2 glad)
+
+
 include_directories(src)
+include_directories(third_party)
 include_directories("third_party/glm-1.0.1")
+
 
 file(GLOB_RECURSE SRC "src/*.cpp" "src/*.c")
 add_executable(${PROJECT_NAME} ${SRC})
@@ -35,6 +53,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	SDL2
 	assimp
     meshoptimizer
+    glad
+    imgui
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC

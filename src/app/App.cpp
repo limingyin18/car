@@ -1,7 +1,9 @@
 #include "App.hpp"
 #include "SDL_keycode.h"
 #include "game/Game.hpp"
+#include "physics/PhysicsSystem.hpp"
 #include "render/Render.hpp"
+#include "tools/Timer.hpp"
 
 #include "glad/glad.h"
 
@@ -11,7 +13,11 @@
 #include <SDL2/SDL_video.h>
 #include <memory>
 
-void ProcessInput(SDL_Event event, Camera &camera, Game &game);
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_sdl2.h"
+
+void ProcessInput(SDL_Event event, Camera &camera, Game &game, Render &render);
 
 void App::Destroy()
 {
@@ -21,12 +27,21 @@ void App::Destroy()
 void App::Init()
 {
     InitWSI();
+    InitIMGUI();
 
     auto &render = Render::GetInstance();
-    render.Init(width_, height_);
+    render.SetWidth(width_);
+    render.SetHeight(height_);
+    render.Init();
+
+    auto &physics_system = PhysicsSystem::GetInstance();
+    physics_system.Init();
 
     auto &game = Game::GetInstance();
     game.Init();
+
+    auto &timer = Timer::GetInstance();
+    timer.Init();
 }
 
 void App::InitWSI()
@@ -66,38 +81,59 @@ void App::InitWSI()
     }
 }
 
+void App::InitIMGUI()
+{
+    spdlog::info("init imgui");
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplSDL2_InitForOpenGL(window_.get(), SDL_GL_GetCurrentContext());
+    ImGui_ImplOpenGL3_Init("#version 460");
+}
+
 void App::Run()
 {
     spdlog::info("app run");
 
+    auto &timer = Timer::GetInstance();
     auto &game = Game::GetInstance();
     auto &render = Render::GetInstance();
+    auto &physics_system = PhysicsSystem::GetInstance();
     SDL_Event event;
     do
     {
-        // auto start = std::chrono::high_resolution_clock::now();
+        timer.Update();
+
         while (SDL_PollEvent(&event) != 0 && event.type != SDL_QUIT)
         {
-            // LOGI(event.type);
-            // engine_->processInputEvent(event, engine_->input);
-            // ImGui_ImplSDL3_ProcessEvent(&event);
-            ProcessInput(event, *render.GetCamera(), game);
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            ProcessInput(event, *render.GetCamera(), game, render);
         }
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
         game.Update();
+
+        physics_system.Update();
+
         render.Draw(game.GetPrimitives());
-        // update();
-        // auto duration =
-        // std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
-        // LOGI("duration: {}", duration.count());
-        // if (engine_->input.keys["esc"])
-        //    break;
+
+        DrawUI();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // PRESENT BACKBUFFER:
         SDL_GL_SwapWindow(window_.get());
     } while (event.type != SDL_QUIT);
 }
 
-void ProcessInput(SDL_Event event, Camera &camera, Game &game)
+void ProcessInput(SDL_Event event, Camera &camera, Game &game, Render &render)
 {
     float speed = 0.5f;
     switch (event.type)
@@ -137,7 +173,7 @@ void ProcessInput(SDL_Event event, Camera &camera, Game &game)
             camera.RotateYaw(-1.0f * speed);
             break;
         case SDLK_f:
-            game.SwitchAnimation();
+            // game.SwitchAnimation();
             break;
         case SDLK_ESCAPE:
             SDL_Event quit_event;
@@ -151,16 +187,53 @@ void ProcessInput(SDL_Event event, Camera &camera, Game &game)
     case SDL_KEYUP:
         // spdlog::info("key up");
         break;
-    case SDL_MOUSEMOTION:
-        // spdlog::info("mouse motion");
+    case SDL_MOUSEMOTION: {
+        int px = event.motion.x;
+        int py = event.motion.y;
+        render.mouse_pos_x = px;
+        render.mouse_pos_y = py;
+        // spdlog::info("mouse motion: x{}, y{}", px, py);
         break;
+    }
     case SDL_MOUSEBUTTONDOWN:
-        // spdlog::info("mouse button down");
+        // render.SetPicking(true);
+        render.mouse_pos_x_last = render.mouse_pos_x;
+        render.mouse_pos_y_last = render.mouse_pos_y;
         break;
     case SDL_MOUSEBUTTONUP:
-        // spdlog::info("mouse button up");
+        render.SetPicking(false);
         break;
     default:
         break;
     }
+}
+
+void App::DrawUI()
+{
+    ImGui::Begin("Cloth"); // Create a window called "Hello, world!" and append into it.
+
+    if (ImGui::Button("Scene 1"))
+    {
+        spdlog::info("Scene 1");
+        auto &game = Game::GetInstance();
+        game.SwitchScene("scene");
+    }
+
+    if (ImGui::Button("Scene 2"))
+    {
+        spdlog::info("Scene 2");
+
+        auto &game = Game::GetInstance();
+        game.SwitchScene("scene_onespring");
+    }
+
+    if (ImGui::Button("Scene 3"))
+    {
+        spdlog::info("Scene 3");
+
+        auto &game = Game::GetInstance();
+        game.SwitchScene("scene_cloth");
+    }
+
+    ImGui::End();
 }

@@ -20,6 +20,7 @@ class Primitive : public IPrimitive
     glm::mat4 transform_ = glm::mat4(1.0f);
 
   public:
+
     void Init(const std::shared_ptr<IMesh> &mesh, const std::shared_ptr<Shader> &shader,
               const std::shared_ptr<IMaterial> &material = nullptr, glm::mat4 transform = glm::mat4(1.0f));
 

@@ -15,6 +15,8 @@ class ActorInstance : public virtual Actor
         return instance_transforms_;
     }
 
+    void Update() override;
+
   protected:
     void CreatePrimitives() override;
 

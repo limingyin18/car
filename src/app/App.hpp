@@ -25,9 +25,11 @@ public:
 
 private:
     void InitWSI();
+    void InitIMGUI();
+    void DrawUI();
 
     std::string title_ = "Borrow The East Wind";
-    uint32_t width_ = 1920;
-    uint32_t height_ = 1080;
+    uint32_t width_ = 1280;
+    uint32_t height_ = 960;
     std::shared_ptr<SDL_Window> window_ = nullptr;
 };

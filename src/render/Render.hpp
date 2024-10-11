@@ -7,15 +7,15 @@
 
 #include "Brdf.hpp"
 #include "Camera/Camera.hpp"
-#include "Equirectangular2Cubemap.hpp"
 #include "ConvolutionCubeMap.hpp"
+#include "Equirectangular2Cubemap.hpp"
+#include "Picking.hpp"
 #include "Prefiltering.hpp"
 #include "Primitive/Primitive.hpp"
 #include "SSAO.hpp"
 #include "Shader/Shader.hpp"
-#include "render/Shadow/CascadedShadowMap.hpp"
 #include "Shadow/Shadow.hpp"
-
+#include "render/Shadow/CascadedShadowMap.hpp"
 
 struct UBOCamera
 {
@@ -38,8 +38,17 @@ class Render
         return instance;
     }
     ~Render();
-    void Init(uint32_t width, uint32_t height);
-    void Draw(const std::vector<std::shared_ptr<Primitive>> &primitives);
+    void Init();
+    void Draw(const std::vector<std::shared_ptr<IPrimitive>> &primitives);
+
+    void SetWidth(uint32_t width)
+    {
+        width_ = width;
+    }
+    void SetHeight(uint32_t height)
+    {
+        height_ = height;
+    }
 
     [[nodiscard]] std::unordered_map<std::string, std::shared_ptr<Shader>> &GetShadersMap()
     {
@@ -77,6 +86,14 @@ class Render
     [[nodiscard]] uint32_t GetBRDF() const
     {
         return brdf_->GetBRDF();
+    }
+
+    int mouse_pos_x, mouse_pos_y;
+    int mouse_pos_x_last, mouse_pos_y_last;
+
+    void SetPicking(bool is_picking)
+    {
+        is_picking_ = is_picking;
     }
 
   private:
@@ -117,7 +134,7 @@ class Render
     // std::shared_ptr<Animation> animation_;
     // std::shared_ptr<Animator> animator_;
 
-    glm::vec3 light_position_ = glm::vec3(5.0f, 10.0f, 10.0f);
+    glm::vec3 light_position_ = glm::vec3(5.0f, 2.5f, 5.0f);
     glm::vec3 sun_direction_;
     glm::vec3 sun_color_;
 
@@ -135,6 +152,7 @@ class Render
 
     std::shared_ptr<CascadedShadowMap> shadow_csm_;
     // std::shared_ptr<Shadow> shadow_;
+    std::shared_ptr<Picking> picking_;
 
     std::thread compute_thread_;
 
@@ -154,4 +172,8 @@ class Render
     std::shared_ptr<ConvolutionCubeMap> convolution_cubemap_;
     std::shared_ptr<Prefiltering> prefilter_cubemap_;
     std::shared_ptr<Brdf> brdf_;
+
+    bool is_picking_ = false;
+    bool is_selected_ = false;
+    uint32_t selected_id_ = -1;
 };

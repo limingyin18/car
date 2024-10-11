@@ -1,5 +1,5 @@
 #include "Skybox.hpp"
-#include "Actor/Actor.hpp"
+#include "game/Actor/Actor.hpp"
 #include "render/Material/MaterialSkybox.hpp"
 #include "render/Mesh/Vertex.hpp"
 #include "render/Render.hpp"
@@ -31,7 +31,7 @@ void Skybox::Init()
 
 void Skybox::Update()
 {
-    material_->SetMat4("view", glm::mat4(glm::mat3(Render::GetInstance().GetCamera()->GetView())));
-    primitives_[0]->SetMaterial(material_);
+    // material_->SetMat4("view", glm::mat4(glm::mat3(Render::GetInstance().GetCamera()->GetView())));
+    // primitives_[0]->SetMaterial(material_);
     Actor::Update();
 }

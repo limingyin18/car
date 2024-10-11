@@ -1,21 +1,11 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <memory>
-#include <spdlog/spdlog.h>
+#include "Scene.hpp"
 
-class Actor;
-class ActorInstance;
-class ActorIndirect;
-class ActorSkeletal;
-class ActorSkeletalInstance;
-class ActorSkeletalIndirect;
-class ActorSkeletalIndirectLod;
-class Primitive;
-class IMesh;
-class Render;
-class Shield;
-class Skybox;
+#include <spdlog/spdlog.h>
+#include <unordered_map>
+
+class IActor;
 
 class Game
 {
@@ -27,11 +17,23 @@ class Game
     }
 
     void Init();
-    void Update();
 
-    [[nodiscard]] std::vector<std::shared_ptr<Primitive>> GetPrimitives() const;
+    void Update()
+    {
+        scene_->Update();
+    }
 
-    void SwitchAnimation();
+    void SwitchScene(std::string scene_name);
+
+    [[nodiscard]] std::vector<std::shared_ptr<IActor>> &GetActors() const
+    {
+        return scene_->GetActors();
+    }
+
+    [[nodiscard]] std::vector<std::shared_ptr<IPrimitive>> GetPrimitives() const
+    {
+        return scene_->GetPrimitives();
+    }
 
     ~Game()
     {
@@ -41,26 +43,21 @@ class Game
     Game(const Game &) = delete;
 
   private:
-    Game()
-    {
-        spdlog::debug("Game construct");
-    };
+    Game();
 
-    void TestBasicGeometry();
+    void InitScene();
+    void InitSceneOneSpring();
+    void InitSceneCloth();
+    std::unordered_map<std::string, std::function<void()>> scene_map_init_;
 
+    void InitBasicGeometry();
     void InitHouse();
     void InitShields();
     void InitArrows();
     void InitCubes();
     void InitPlane();
+    void InitOcean();
+    void InitCloth();
 
-    std::vector<std::shared_ptr<Actor>> actors_;
-
-    uint32_t index = 0;
-    std::shared_ptr<ActorSkeletalIndirectLod> shield_;
-    std::shared_ptr<ActorSkeletalIndirectLod> arrow_;
-    std::shared_ptr<Actor> house_;
-    std::shared_ptr<Skybox> skybox_;
-    std::shared_ptr<ActorIndirect> cube_;
-    std::shared_ptr<Actor> plane_;
+    std::unique_ptr<Scene> scene_;
 };

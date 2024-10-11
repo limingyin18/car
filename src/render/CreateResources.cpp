@@ -111,6 +111,22 @@ void Render::CreateDefaultTexture()
         uint32_t texture;
         glCreateTextures(GL_TEXTURE_2D, 1, &texture);
         glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xff00ff00;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_green"] = texture;
+    }
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
+        uint32_t color = 0xffff0000;
+        glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+        textures_map_["default_blue"] = texture;
+    }
+    {
+        uint32_t texture;
+        glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+        glTextureStorage2D(texture, 1, GL_RGBA8, 1, 1);
         uint32_t color = 0xffa5d5fa;
         glTextureSubImage2D(texture, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
         textures_map_["default_yellow1"] = texture;

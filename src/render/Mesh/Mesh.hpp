@@ -2,6 +2,7 @@
 
 #include "IMesh.hpp"
 
+#include <cstdint>
 #include <glm/glm.hpp>
 
 #include <string>
@@ -82,6 +83,8 @@ class Mesh : public IMesh
         return indices_count_;
     }
 
+    void SetDynamic();
+
   protected:
     std::vector<Vertex> vertices_;
     std::vector<uint32_t> indices_;
@@ -97,6 +100,9 @@ class Mesh : public IMesh
 
     std::string name_ = "";
 
+    uint32_t vbo_flag_ = 0;
+
     void SetupBuffer() override;
+    void UpdateVertices();
     void SetupVAO() override;
 };

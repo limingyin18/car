@@ -23,7 +23,8 @@ in vec3 FragPos;
 
 out vec4 FragColor;
 
-float specularStrength = 1.f;
+uniform float specularStrength = 1.f;
+uniform float specularPow = 32.f;
 
 layout(binding = 0) uniform sampler2D ambientTexture;
 
@@ -112,7 +113,7 @@ void main()
 
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularPow);
     vec3 specular = specularStrength * spec * lightColor;
 
     vec3 color = texture(ambientTexture, TexCoord).rgb;
