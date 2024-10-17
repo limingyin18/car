@@ -30,4 +30,6 @@ class IMesh
 
     virtual void SetupBuffer() = 0;
     virtual void SetupVAO() = 0;
+
+    virtual void ReComputeNormal() = 0;
 };

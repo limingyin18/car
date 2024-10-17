@@ -2,7 +2,9 @@
 
 #include "game/Actor/ActorInstance.hpp"
 #include "glm/fwd.hpp"
+#include "glm/glm.hpp"
 #include "glm/gtx/vector_angle.hpp"
+#include "physics/Math.hpp"
 #include "physics/Particle.hpp"
 #include "physics/PhysicsSystem.hpp"
 #include "render/BasicGeometry/Cube.hpp"
@@ -11,12 +13,14 @@
 #include "render/Mesh/Mesh.hpp"
 #include "render/Mesh/Vertex.hpp"
 #include "render/Render.hpp"
+#include <cassert>
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "game/Game.hpp"
 
 #include <cstdint>
 #include <memory>
+#include <unordered_set>
 
 using namespace std;
 
@@ -97,8 +101,9 @@ void Cloth::GenerateSegments()
 
     std::sort(triples.begin(), triples.end());
 
-    for (auto &&triple : triples)
+    for (size_t i = 0; i < triples.size(); ++i)
     {
+        auto triple = triples[i];
         Edge edge;
         edge.vertex_id_start_ = triple.vertex_id_start_;
         edge.vertex_id_end_ = triple.vertex_id_end_;
@@ -110,6 +115,7 @@ void Cloth::GenerateSegments()
         if (edges_.back().vertex_id_start_ == edge.vertex_id_start_ &&
             edges_.back().vertex_id_end_ == edge.vertex_id_end_)
         {
+            adjacency_list_.emplace_back(triples[i - 1].triangle_id_, triple.triangle_id_);
             continue;
         }
 
@@ -182,6 +188,7 @@ void Cloth::GeneratePoints()
     sphere->SetMaterial(material);
 
     std::vector<glm::mat4> instance_transforms;
+    m_ = vertices.size();
     for (auto &vertex : vertices)
     {
         glm::mat4 transform = glm::translate(vertex.position_);
@@ -206,8 +213,9 @@ void Cloth::Update()
     auto &vertices = mesh->GetVertices();
     for (uint32_t i = 0; i < vertices.size(); ++i)
     {
-        vertices[i].position_ = physics_system.particles_[i]->pos_;
+        vertices[i].position_ = ToGLM(physics_system.particles_[i]->pos_);
     }
+    mesh->ReComputeNormal();
     mesh->UpdateVBO();
 
     Actor::Update();
@@ -228,9 +236,9 @@ void Cloth::InitPhysics()
         glm::vec4 perspective;
         glm::decompose(transform, scale, rotation, translation, skew, perspective);
 
-        auto particle = make_shared<Particle>(translation);
-        particle->mass_inv_ = 100.f;
-        if (i == 0 || i == 3 || i == 12 || i == 15)
+        auto particle = make_shared<Particle>(ToEigen(translation));
+        particle->mass_inv_ = 1.f;
+        if (i == 0 || i == 9 || i == 90 || i == 99)
         {
             particle->mass_inv_ = 0.f;
         }
@@ -243,6 +251,69 @@ void Cloth::InitPhysics()
         auto edge = edges_[i];
         auto particle0 = particles[edge.vertex_id_start_];
         auto particle1 = particles[edge.vertex_id_end_];
-        physics_system.AddSpring(particle0, particle1);
+        physics_system.AddSpring(particle0, particle1, 100);
     }
+
+    auto mesh = dynamic_pointer_cast<MeshTBN>(meshes_[0]);
+    auto &vertices = mesh->GetVertices();
+    auto &indices = mesh->GetIndices();
+    for (auto &&adjacency : adjacency_list_)
+    {
+        uint32_t x00 = indices[3 * adjacency.first + 0];
+        uint32_t x10 = indices[3 * adjacency.first + 1];
+        uint32_t x20 = indices[3 * adjacency.first + 2];
+
+        uint32_t x01 = indices[3 * adjacency.second + 0];
+        uint32_t x11 = indices[3 * adjacency.second + 1];
+        uint32_t x21 = indices[3 * adjacency.second + 2];
+
+        std::unordered_set<uint32_t> s0;
+        s0.insert(x00);
+        s0.insert(x10);
+        s0.insert(x20);
+
+        std::unordered_set<uint32_t> s1;
+        s1.insert(x01);
+        s1.insert(x11);
+        s1.insert(x21);
+
+        std::unordered_set<uint32_t> s;
+        s.insert(x00);
+        s.insert(x10);
+        s.insert(x20);
+        s.insert(x01);
+        s.insert(x11);
+        s.insert(x21);
+
+        s0.erase(x01);
+        s0.erase(x11);
+        s0.erase(x21);
+
+        s1.erase(x00);
+        s1.erase(x10);
+        s1.erase(x20);
+
+        s.erase(*s0.begin());
+        s.erase(*s1.begin());
+
+        assert(s.size() == 2);
+        assert(s0.size() == 1);
+        assert(s1.size() == 1);
+
+        auto particle0 = particles[*s0.begin()];
+        auto it = s.begin();
+        auto particle1 = particles[*it];
+        auto particle2 = particles[*++it];
+        auto particle3 = particles[*s1.begin()];
+        physics_system.AddDihedral(particle0, particle3, particle1, particle2, 1.f);
+        physics_system.AddDihedral(particle1, particle2, particle0, particle3, 1.f);
+        physics_system.AddSpring(particle0, particle3, 100);
+    }
+}
+
+void Cloth::MassMatrix()
+{
+    massMatrix_ = Eigen::MatrixXf(m_, m_);
+    massMatrix_.setIdentity();
+    x_ = Eigen::VectorXf(3 * m_);
 }

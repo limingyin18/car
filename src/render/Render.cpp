@@ -338,12 +338,13 @@ void Render::Draw(const std::vector<std::shared_ptr<IPrimitive>> &primitives)
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_BACK);
         glViewport(0, 0, width_, height_);
+        glDisable(GL_CULL_FACE);
 
         uint32_t depth_texture = shadow_csm_->GetDepthMap();
         glBindTextureUnit(6, depth_texture);
         for (auto &primitive : primitives)
         {
-            glEnable(GL_CULL_FACE);
+            // glEnable(GL_CULL_FACE);
             primitive->Draw();
         }
     }

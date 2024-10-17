@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <iostream>
 
+#include <Eigen/Eigen>
+
 class Cube;
 class Sphere;
 
@@ -35,8 +37,10 @@ class Cloth : public Actor
   private:
     std::vector<std::shared_ptr<Actor>> segments_;
     std::shared_ptr<Actor> points_;
+    int m_ = 0;
 
     std::vector<Edge> edges_;
+    std::vector<std::pair<uint32_t, uint32_t>> adjacency_list_;
 
   public:
     explicit Cloth() = default;
@@ -52,4 +56,9 @@ class Cloth : public Actor
     void GeneratePoints();
     void GenerateSegments();
     void InitPhysics();
+
+// Implicit Integrate
+    void MassMatrix();
+    Eigen::MatrixXf massMatrix_;
+    Eigen::VectorXf x_;
 };

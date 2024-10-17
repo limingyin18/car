@@ -40,6 +40,9 @@ add_library(imgui
 target_include_directories(imgui PUBLIC "${IMGUI_DIR}" "${IMGUI_DIR}/backends")
 target_link_libraries(imgui SDL2 glad)
 
+# Eigen
+add_subdirectory("third_party/eigen")
+# target_include_directories(eigen PUBLIC "third_party/eigen")
 
 include_directories(src)
 include_directories(third_party)
@@ -55,6 +58,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     meshoptimizer
     glad
     imgui
+    eigen
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC

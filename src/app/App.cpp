@@ -210,26 +210,31 @@ void ProcessInput(SDL_Event event, Camera &camera, Game &game, Render &render)
 
 void App::DrawUI()
 {
+    float all_t = Timer::GetInstance().GetAllT();
+
     ImGui::Begin("Cloth"); // Create a window called "Hello, world!" and append into it.
 
-    if (ImGui::Button("Scene 1"))
+    std::string time_str = std::string("time: ") + std::to_string(all_t);
+    ImGui::Text("%s", time_str.c_str());
+
+    if (ImGui::Button("Scene"))
     {
-        spdlog::info("Scene 1");
+        spdlog::info("Scene");
         auto &game = Game::GetInstance();
         game.SwitchScene("scene");
     }
 
-    if (ImGui::Button("Scene 2"))
+    if (ImGui::Button("Scene One Spring"))
     {
-        spdlog::info("Scene 2");
+        spdlog::info("Scene One Spring");
 
         auto &game = Game::GetInstance();
         game.SwitchScene("scene_onespring");
     }
 
-    if (ImGui::Button("Scene 3"))
+    if (ImGui::Button("Scene Cloth"))
     {
-        spdlog::info("Scene 3");
+        spdlog::info("Scene Cloth");
 
         auto &game = Game::GetInstance();
         game.SwitchScene("scene_cloth");

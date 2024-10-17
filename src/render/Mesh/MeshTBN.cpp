@@ -56,3 +56,30 @@ void MeshTBN::UpdateVBO()
 {
     glNamedBufferSubData(vbo_, 0, vertices_.size() * sizeof(VertexNormalMap), vertices_.data());
 }
+
+void MeshTBN::ReComputeNormal()
+{
+    for (auto &d : vertices_)
+        d.normal_ = {0.f, 0.f, 0.f};
+
+    for (unsigned i = 0; i < indices_.size();)
+    {
+        auto id1 = indices_[i++];
+        auto id2 = indices_[i++];
+        auto id3 = indices_[i++];
+
+        auto v1 = vertices_[id1].position_;
+        auto v2 = vertices_[id2].position_;
+        auto v3 = vertices_[id3].position_;
+
+        // This does weighted area based on triangle area
+        auto n = glm::cross(v2 - v1, v3 - v1);
+
+        vertices_[id1].normal_ += n;
+        vertices_[id2].normal_ += n;
+        vertices_[id3].normal_ += n;
+    }
+
+    for (auto &d : vertices_)
+        d.normal_ = glm::normalize(d.normal_);
+}

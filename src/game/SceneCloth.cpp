@@ -27,7 +27,7 @@ void SceneCloth::InitCloth()
     auto plane = make_shared<Plane>();
     plane->SetDynamic();
 
-    plane->Init(4, 10.f);
+    plane->Init(10, 10.f);
     cloth_ = make_shared<Cloth>();
     cloth_->AddMesh(plane);
     cloth_->SetShader(shaders_map["phong"]);
@@ -36,7 +36,7 @@ void SceneCloth::InitCloth()
     Texture texture;
     texture.id = render.GetTexture("default_red");
     material->SetTexture(0, texture);
-    material->SetFloat("ambientStrength", 0.1f);
+    material->SetFloat("ambientStrength", 0.00f);
     material->SetFloat("specularStrength", 0.5f);
     material->SetFloat("specularPow", 255.f);
 

@@ -85,6 +85,8 @@ class Mesh : public IMesh
 
     void SetDynamic();
 
+    void ReComputeNormal() override;
+
   protected:
     std::vector<Vertex> vertices_;
     std::vector<uint32_t> indices_;

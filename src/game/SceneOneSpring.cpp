@@ -10,7 +10,10 @@
 
 #include <glm/gtx/matrix_decompose.hpp>
 
+#include "physics/Math.hpp"
+
 using namespace std;
+using namespace Eigen;
 
 void SceneOneSpring::Init()
 {
@@ -44,13 +47,13 @@ void SceneOneSpring::InitPoints()
     glm::vec3 translation{0.0f, 0.0f, 0.0f};
     glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation);
     instance_transforms.push_back(transform);
-    auto particle0 = make_shared<Particle>(translation);
+    auto particle0 = make_shared<Particle>(ToEigen(translation));
     physics_system.AddParticle(particle0);
 
     translation = {1.0f, 0.0f, 0.0f};
     transform = glm::translate(glm::mat4(1.0f), translation);
     instance_transforms.push_back(transform);
-    auto particle1 = make_shared<Particle>(translation);
+    auto particle1 = make_shared<Particle>(ToEigen(translation));
     physics_system.AddParticle(particle1);
 
     sphere->SetInstanceTransforms(instance_transforms);
@@ -73,15 +76,16 @@ void SceneOneSpring::InitSpring()
         auto particle1 = particles[edge.vertex_id_end_];
         physics_system.AddSpring(particle0, particle1);
     }
-    physics_system.particles_[1]->pos_ = glm::vec3{1.5f, 0.0f, 0.0f};
+    physics_system.particles_[1]->pos_ = Vector3f{1.5f, 0.0f, 0.0f};
 }
 
 void SceneOneSpring::Update()
 {
     auto points = std::dynamic_pointer_cast<ActorInstance>(points_);
     auto &instance_transforms = points->GetInstanceTransforms();
-    instance_transforms[0] = glm::translate(glm::mat4(1.0f), PhysicsSystem::GetInstance().particles_[0]->pos_);
-    instance_transforms[1] = glm::translate(glm::mat4(1.0f), PhysicsSystem::GetInstance().particles_[1]->pos_);
+
+    instance_transforms[0] = glm::translate(glm::mat4(1.0f), ToGLM(PhysicsSystem::GetInstance().particles_[0]->pos_));
+    instance_transforms[1] = glm::translate(glm::mat4(1.0f), ToGLM(PhysicsSystem::GetInstance().particles_[1]->pos_));
     points->SetInstanceTransforms(instance_transforms);
 
     Scene::Update();

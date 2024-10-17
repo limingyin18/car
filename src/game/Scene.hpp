@@ -4,6 +4,7 @@
 #include <vector>
 
 class IActor;
+class Actor;
 class IPrimitive;
 class Skybox;
 
@@ -25,5 +26,8 @@ class Scene
 
   private:
     void InitSkybox();
+    void InitPlane();
+
     std::shared_ptr<Skybox> skybox_;
+    std::shared_ptr<Actor> plane_;
 };

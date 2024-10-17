@@ -1,19 +1,22 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include <Eigen/Eigen>
 
 class Particle
 {
   public:
-    Particle(glm::vec3 pos = glm::vec3(0.f), glm::vec3 velocity = glm::vec3(0.f), float mass_inv = 1.f);
+    Particle(Eigen::Vector3f pos = Eigen::Vector3f(0.f, 0.f, 0.f), Eigen::Vector3f velocity = Eigen::Vector3f(0.f, 0.f, 0.f), float mass_inv = 1.f);
     virtual ~Particle() = default;
 
     void Update(float dt);
-    void AddForce(glm::vec3 force);
+    void AddForce(Eigen::Vector3f force);
+    void AddForceDebug(Eigen::Vector3f force);
 
-    glm::vec3 pos_;
-    glm::vec3 velocity_;
+    Eigen::Vector3f pos_ = Eigen::Vector3f(0.f, 0.f, 0.f);
+    Eigen::Vector3f velocity_ = Eigen::Vector3f(0.f, 0.f, 0.f);
     float mass_inv_ = 1.f;
 
-    glm::vec3 force_ = glm::vec3(0.f);
+    Eigen::Vector3f force_ = Eigen::Vector3f(0.f, 0.f, 0.f);
+
+    Eigen::Vector3f force_debug_ = Eigen::Vector3f(0.f, 0.f, 0.f);
 };

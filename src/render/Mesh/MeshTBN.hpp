@@ -21,6 +21,8 @@ class MeshTBN : public Mesh
 
     void UpdateVBO();
 
+    void ReComputeNormal() override;
+
   protected:
     void SetupBuffer() override;
     void SetupVAO() override;
