@@ -18,21 +18,21 @@ void PhysicsSystem::Update()
     {
         spring.Update();
     }
-    for (auto &dihedral : dihedrals_)
-    {
-        dihedral.Update();
-    }
+    // for (auto &dihedral : dihedrals_)
+    // {
+    //     dihedral.Update();
+    // }
 
-    for (auto &particle : particles_)
-    {
-        particle->AddForce(gravity);
-    }
+    // for (auto &particle : particles_)
+    // {
+    //     particle->AddForce(gravity);
+    // }
 
-    // std::cout << "update" << endl;
-    for (auto &particle : particles_)
-    {
-        particle->Update(dt);
-    }
+    // // std::cout << "update" << endl;
+    // for (auto &particle : particles_)
+    // {
+    //     particle->Update(dt);
+    // }
 }
 
 void PhysicsSystem::AddSpring(const std::shared_ptr<Particle> &particle0, const std::shared_ptr<Particle> &particle1,

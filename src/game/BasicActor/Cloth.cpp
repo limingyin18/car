@@ -207,13 +207,12 @@ void Cloth::Init()
 
 void Cloth::Update()
 {
-    auto &physics_system = PhysicsSystem::GetInstance();
-
+    cloth_.Update();
     auto mesh = dynamic_pointer_cast<MeshTBN>(meshes_[0]);
     auto &vertices = mesh->GetVertices();
     for (uint32_t i = 0; i < vertices.size(); ++i)
     {
-        vertices[i].position_ = ToGLM(physics_system.particles_[i]->pos_);
+        vertices[i].position_ = ToGLM(cloth_.particles_[i]->pos_);
     }
     mesh->ReComputeNormal();
     mesh->UpdateVBO();
@@ -223,8 +222,6 @@ void Cloth::Update()
 
 void Cloth::InitPhysics()
 {
-    auto &physics_system = PhysicsSystem::GetInstance();
-
     auto &instance_transforms = std::dynamic_pointer_cast<ActorInstance>(points_)->GetInstanceTransforms();
     for (uint32_t i = 0; i < instance_transforms.size(); ++i)
     {
@@ -237,21 +234,26 @@ void Cloth::InitPhysics()
         glm::decompose(transform, scale, rotation, translation, skew, perspective);
 
         auto particle = make_shared<Particle>(ToEigen(translation));
-        particle->mass_inv_ = 1.f;
+        particle->mass_inv_ = 1.f / 0.001f;
         if (i == 0 || i == 9 || i == 90 || i == 99)
         {
             particle->mass_inv_ = 0.f;
         }
-        physics_system.AddParticle(particle);
+
+        // if (i == 0 || i == 2 || i == 6 || i == 8)
+        // {
+        //     particle->mass_inv_ = 0.f;
+        // }
+        cloth_.AddParticle(particle);
     }
 
-    auto &particles = physics_system.particles_;
+    auto &particles = cloth_.particles_;
     for (uint32_t i = 0; i < edges_.size(); ++i)
     {
         auto edge = edges_[i];
         auto particle0 = particles[edge.vertex_id_start_];
         auto particle1 = particles[edge.vertex_id_end_];
-        physics_system.AddSpring(particle0, particle1, 100);
+        cloth_.AddSpring(edge.vertex_id_start_, edge.vertex_id_end_, particle0, particle1, 1.f);
     }
 
     auto mesh = dynamic_pointer_cast<MeshTBN>(meshes_[0]);
@@ -305,15 +307,9 @@ void Cloth::InitPhysics()
         auto particle1 = particles[*it];
         auto particle2 = particles[*++it];
         auto particle3 = particles[*s1.begin()];
-        physics_system.AddDihedral(particle0, particle3, particle1, particle2, 1.f);
-        physics_system.AddDihedral(particle1, particle2, particle0, particle3, 1.f);
-        physics_system.AddSpring(particle0, particle3, 100);
+        // physics_system.AddDihedral(particle0, particle3, particle1, particle2, 1.f);
+        // physics_system.AddDihedral(particle1, particle2, particle0, particle3, 1.f);
+        // physics_system.AddSpring(particle0, particle3, 100);
     }
-}
-
-void Cloth::MassMatrix()
-{
-    massMatrix_ = Eigen::MatrixXf(m_, m_);
-    massMatrix_.setIdentity();
-    x_ = Eigen::VectorXf(3 * m_);
+    cloth_.Init();
 }

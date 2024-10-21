@@ -6,6 +6,8 @@
 
 #include <Eigen/Eigen>
 
+#include "physics/Cloth.hpp"
+
 class Cube;
 class Sphere;
 
@@ -57,8 +59,5 @@ class Cloth : public Actor
     void GenerateSegments();
     void InitPhysics();
 
-// Implicit Integrate
-    void MassMatrix();
-    Eigen::MatrixXf massMatrix_;
-    Eigen::VectorXf x_;
+    physics::Cloth cloth_;
 };
