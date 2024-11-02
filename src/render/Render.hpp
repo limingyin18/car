@@ -96,6 +96,17 @@ class Render
         is_picking_ = is_picking;
     }
 
+    bool GetIsSelected()
+    {
+        return is_selected_;
+    }
+
+    glm::vec3 GetTranslate()
+    {
+        // return translate_;
+        return offset_;
+    }
+
   private:
     Render();
     void CreateBasicGeometry();
@@ -176,4 +187,6 @@ class Render
     bool is_picking_ = false;
     bool is_selected_ = false;
     uint32_t selected_id_ = -1;
+    glm::vec3 offset_;
+    glm::mat4 translate_;
 };

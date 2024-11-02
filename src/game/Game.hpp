@@ -48,6 +48,7 @@ class Game
     void InitScene();
     void InitSceneOneSpring();
     void InitSceneCloth();
+    void InitSceneClothSphere();
     std::unordered_map<std::string, std::function<void()>> scene_map_init_;
 
     void InitBasicGeometry();

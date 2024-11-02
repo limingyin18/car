@@ -2,6 +2,7 @@
 
 #include "Actor/Actor.hpp"
 #include "SceneOneSpring.hpp"
+#include "SceneClothSphere.hpp"
 #include "SceneCloth.hpp"
 #include "game/Scene.hpp"
 #include "physics/PhysicsSystem.hpp"
@@ -19,6 +20,7 @@ Game::Game()
     scene_map_init_["scene"] = [this]() { InitScene(); };
     scene_map_init_["scene_onespring"] = [this]() { InitSceneOneSpring(); };
     scene_map_init_["scene_cloth"] = [this]() { InitSceneCloth(); };
+    scene_map_init_["scene_cloth_sphere"] = [this]() { InitSceneClothSphere(); };
 }
 
 void Game::Init()
@@ -49,5 +51,11 @@ void Game::InitSceneOneSpring()
 void Game::InitSceneCloth()
 {
     scene_ = make_unique<SceneCloth>();
+    scene_->Init();
+}
+
+void Game::InitSceneClothSphere()
+{
+    scene_ = make_unique<SceneClothSphere>();
     scene_->Init();
 }

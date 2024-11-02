@@ -19,6 +19,7 @@ class Picking
     }
 
     uint32_t Pick();
+    float depth_;
 
   private:
     uint32_t fbo_ = -1;

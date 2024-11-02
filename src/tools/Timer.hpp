@@ -14,6 +14,11 @@ class Timer : public Singleton<Timer>, public System
   public:
     void Update() override;
 
+    float GetPhysicsFixedDeltaTime()
+    {
+        return 1.f/60.f;
+    }
+
     float GetDeltaT()
     {
         return dt_;

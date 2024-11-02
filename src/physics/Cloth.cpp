@@ -44,7 +44,7 @@ void Cloth::Update()
 {
     static int count = 0;
     auto start = chrono::high_resolution_clock::now();
-    float dt = Timer::GetInstance().GetDeltaT();
+    float dt = Timer::GetInstance().GetPhysicsFixedDeltaTime();
     float dt2 = dt * dt;
 
     for (int i = 0; i < m_; ++i)
@@ -61,7 +61,7 @@ void Cloth::Update()
         v_.block<3, 1>(3 * i, 0) = particles_[i]->velocity_;
     }
 
-    for (int k = 0; k < 10; k++)
+    for (int k = 0; k < 32; k++)
     {
         for (int i = 0; i < m_; ++i)
         {
@@ -80,34 +80,32 @@ void Cloth::Update()
 
             f_.block<3, 1>(3 * spring->i, 0) += spring_[s]->fe;
             f_.block<3, 1>(3 * spring->j, 0) += -spring_[s]->fe;
-            // if(spring->i == 1 || spring->j == 1)
-            // {
-            //     spdlog::debug("i: {}, j: {}", spring->i, spring->j);
-            //     stringstream ss;
-            //     ss << spring_[s]->fe << std::endl;
-            //     spdlog::info("spring_[s]->fe: \n {}", ss.str());
-            // }
+
         }
 
-        for (int s = 0; s < spring_.size(); ++s)
-        {
-            auto spring = spring_[s];
-            Vector3f x0k = xk_.block<3, 1>(3 * spring->i, 0);
-            Vector3f x1k = xk_.block<3, 1>(3 * spring->j, 0);
-            spring->UpdateHe(x0k, x1k);
+        // for (int s = 0; s < spring_.size(); ++s)
+        // {
+        //     auto spring = spring_[s];
+        //     Vector3f x0k = xk_.block<3, 1>(3 * spring->i, 0);
+        //     Vector3f x1k = xk_.block<3, 1>(3 * spring->j, 0);
+        //     spring->UpdateHe(x0k, x1k);
 
-            h_.block<3, 3>(3 * spring->i, 3 * spring->i) += spring_[s]->He;
-            h_.block<3, 3>(3 * spring->j, 3 * spring->j) += spring_[s]->He;
+        //     h_.block<3, 3>(3 * spring->i, 3 * spring->i) += spring_[s]->He;
+        //     h_.block<3, 3>(3 * spring->j, 3 * spring->j) += spring_[s]->He;
 
-            h_.block<3, 3>(3 * spring->i, 3 * spring->j) += -spring_[s]->He;
-            h_.block<3, 3>(3 * spring->j, 3 * spring->i) += -spring_[s]->He;
-        }
+        //     h_.block<3, 3>(3 * spring->i, 3 * spring->j) += -spring_[s]->He;
+        //     h_.block<3, 3>(3 * spring->j, 3 * spring->i) += -spring_[s]->He;
+        // }
 
         F_ = 1.f / dt2 * M_ * (xk_ - x_ - dt * v_) - f_;
-        H_ = 1.f / dt2 * M_ + h_;
-
-        auto H_inv = H_.inverse();
-        dx_ = -H_inv * F_;
+        // H_ = 1.f / dt2 * M_ + h_;
+        // auto H_inv = H_.inverse();
+        // dx_ = -H_inv * F_;
+        for (int i = 0; i < m_; ++i)
+        {
+            float P = 1.f / particles_[i]->mass_inv_ / dt2 + 4.f;
+            dx_.block<3, 1>(3*i, 0) = - 1.f / P * F_.block<3, 1>(3 * i, 0);
+        }
         xk_ += dx_;
 
         // stringstream ss;
@@ -146,8 +144,6 @@ void Cloth::Update()
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     // std::cout << "Cloth::Update: " << duration.count() << " microseconds" << std::endl;
-    count++;
-    // std::cout << count << std::endl;
 }
 
 void Cloth::AddParticle(const std::shared_ptr<Particle> &particle)

@@ -61,5 +61,7 @@ uint32_t Picking::Pick()
     float index = 0.f;
     glReadPixels(x_offset_, y_offset_, 1, 1, GL_RED, GL_FLOAT, &index);
     index = std::round(index);
+
+    glReadPixels(x_offset_, y_offset_, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth_);
     return index;
 }

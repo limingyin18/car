@@ -12,6 +12,9 @@
 #include "render/Brdf.hpp"
 #include "tools/Tool.hpp"
 
+#include "glm/gtx/string_cast.hpp"
+#include <glm/gtx/matrix_decompose.hpp>
+
 #include <cstdint>
 #include <spdlog/spdlog.h>
 
@@ -213,7 +216,7 @@ void Render::Init()
     // shadow_->Init();
 
     picking_ = make_shared<Picking>();
-    picking_->Init(shaders_map_["picking_instance"]);
+    picking_->Init(shaders_map_["picking"]);
 
     InitShaders();
     CreateUBO();
@@ -254,40 +257,54 @@ void Render::Draw(const std::vector<std::shared_ptr<IPrimitive>> &primitives)
         }
     }
 
-    // // picking pass
-    // if (is_picking_)
-    // {
-    //     picking_->Use(mouse_pos_x, height_ - 1 - mouse_pos_y);
+    // picking pass
+    if (is_picking_)
+    {
+        picking_->Use(mouse_pos_x, height_ - 1 - mouse_pos_y);
 
-    //     for (uint32_t i = 0; i < primitives.size(); ++i)
-    //     {
-    //         auto &primitive = primitives[i];
-    //         if (dynamic_pointer_cast<Sphere>(primitive->GetMesh()) == nullptr)
-    //         {
-    //             continue;
-    //         }
-    //         picking_->GetShader()->setInt("actorID", i);
-    //         auto shader = primitive->GetShader();
-    //         primitive->SetShader(picking_->GetShader());
-    //         primitive->Draw();
-    //         primitive->SetShader(shader);
-    //     }
-    //     glDisable(GL_SCISSOR_TEST);
-    //     uint32_t index = picking_->Pick();
-    //     if (index != -1)
-    //     {
-    //         selected_id_ = index;
-    //         is_selected_ = true;
+        for (uint32_t i = 0; i < primitives.size(); ++i)
+        {
+            auto &primitive = primitives[i];
+            if (dynamic_pointer_cast<Sphere>(primitive->GetMesh()) == nullptr)
+            {
+                continue;
+            }
+            glm::mat4 transform = primitive->GetTransform();
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::decompose(transform, scale, rotation, translation, skew, perspective);
 
-    //         spdlog::debug("selected {}", selected_id_);
-    //     }
-    //     else
-    //     {
-    //         is_selected_ = false;
-    //         spdlog::debug("not selected");
-    //     }
-    //     is_picking_ = false;
-    // }
+            glm::mat4 view = camera_->GetView();
+            glm::mat4 proj = camera_->GetProj();
+            glm::mat4 mvp = proj * view;
+            glm::vec3 screen_pos = glm::project(translation, view, proj, glm::vec4(0, 0, width_, height_));
+            offset_ = glm::vec3(mouse_pos_x, mouse_pos_y, screen_pos.z) - screen_pos;
+
+            picking_->GetShader()->setInt("actorID", i);
+            auto shader = primitive->GetShader();
+            primitive->SetShader(picking_->GetShader());
+            primitive->Draw();
+            primitive->SetShader(shader);
+        }
+        glDisable(GL_SCISSOR_TEST);
+        uint32_t index = picking_->Pick();
+        if (index != -1)
+        {
+            selected_id_ = index;
+            is_selected_ = true;
+
+            spdlog::debug("selected {}", selected_id_);
+        }
+        else
+        {
+            is_selected_ = false;
+            spdlog::debug("not selected");
+        }
+        is_picking_ = false;
+    }
 
     // // shadow pass
     // {
@@ -349,37 +366,58 @@ void Render::Draw(const std::vector<std::shared_ptr<IPrimitive>> &primitives)
         }
     }
 
-    // if (is_selected_)
-    // {
-    //     // high light
-    //     auto highlight_shader = shaders_map_["highlight"];
-    //     for (uint32_t i = 0; i < primitives.size(); ++i)
-    //     {
-    //         auto &primitive = primitives[i];
-    //         if (dynamic_pointer_cast<Sphere>(primitive->GetMesh()) == nullptr)
-    //         {
-    //             continue;
-    //         }
+    if (is_selected_)
+    {
+        // high light
+        auto highlight_shader = shaders_map_["highlight"];
+        for (uint32_t i = 0; i < primitives.size(); ++i)
+        {
+            auto &primitive = primitives[i];
+            if (dynamic_pointer_cast<Sphere>(primitive->GetMesh()) == nullptr)
+            {
+                continue;
+            }
 
-    //         float dx = float(mouse_pos_x - mouse_pos_x_last) / width_ * 2.f;
-    //         float dy = float(mouse_pos_y - mouse_pos_y_last) / height_ * 2.f;
-    //         glm::mat4 translate = glm::translate(glm::mat4(1.f), glm::vec3(dx, 0.f, dy));
+            float x_ndc_ori = 2.f * float(mouse_pos_x_last) / width_ - 1.f;
+            float y_ndc_ori = 1.f - 2.f * float(mouse_pos_y_last) / height_;
+            float x_ndc_new = 2.f * float(mouse_pos_x) / width_ - 1.f;
+            float y_ndc_new = 1.f - 2.f * float(mouse_pos_y) / height_;
 
-    //         auto primitive_inst = dynamic_pointer_cast<PrimitiveInstance>(primitive);
+            float dx = float(mouse_pos_x - mouse_pos_x_last) / width_ * 2.f;
+            float dy = -float(mouse_pos_y - mouse_pos_y_last) / height_ * 2.f;
+            float z = picking_->depth_ * 2.f - 1.f;
+            glm::mat4 translate = glm::translate(glm::mat4(1.f), glm::vec3(dx, 0.f, dy));
+            highlight_shader->use();
 
-    //         highlight_shader->use();
-    //         auto model_matrix = primitive_inst->GetInstanceTransforms()[selected_id_];
-    //         model_matrix = glm::scale(model_matrix, glm::vec3(1.1f));
-    //         model_matrix = translate * model_matrix;
-    //         highlight_shader->setMat4("model", model_matrix);
-    //         primitive->SetTransform(model_matrix);
-    //         auto shader = primitive->GetShader();
-    //         primitive->SetShader(highlight_shader);
-    //         primitive->Primitive::Draw();
-    //         primitive->SetShader(shader);
-    //         primitive->SetTransform(glm::mat4(1.f));
-    //     }
-    // }
+            auto primitive_inst = dynamic_pointer_cast<PrimitiveInstance>(primitive);
+            if (primitive_inst != nullptr)
+            {
+                auto model_matrix = primitive_inst->GetInstanceTransforms()[selected_id_];
+                model_matrix = glm::scale(model_matrix, glm::vec3(1.1f));
+                model_matrix = translate * model_matrix;
+                highlight_shader->setMat4("model", model_matrix);
+                primitive->SetTransform(model_matrix);
+                auto shader = primitive->GetShader();
+                primitive->SetShader(highlight_shader);
+                primitive_inst->Primitive::Draw();
+                primitive->SetShader(shader);
+                primitive->SetTransform(glm::mat4(1.f));
+            }
+            else
+            {
+                auto model_matrix = primitive->GetTransform();
+                model_matrix = glm::scale(model_matrix, glm::vec3(1.1f));
+                // model_matrix = translate_ * model_matrix;
+                highlight_shader->setMat4("model", model_matrix);
+                // primitive->SetTransform(model_matrix);
+                auto shader = primitive->GetShader();
+                primitive->SetShader(highlight_shader);
+                primitive->Draw();
+                primitive->SetShader(shader);
+                // primitive->SetTransform(glm::mat4(1.f));
+            }
+        }
+    }
 
     // copy to window
     {

@@ -1,6 +1,7 @@
 #include "Cloth.hpp"
 
 #include "game/Actor/ActorInstance.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/vector_angle.hpp"
@@ -160,7 +161,7 @@ void Cloth::GenerateSegments()
 
     for (auto &&segment : segments_)
     {
-        actors.push_back(segment);
+        // actors.push_back(segment);
     }
 }
 
@@ -192,12 +193,13 @@ void Cloth::GeneratePoints()
     for (auto &vertex : vertices)
     {
         glm::mat4 transform = glm::translate(vertex.position_);
+        transform = glm::translate(transform, glm::vec3(0.f, 0.f, 0.f));
         instance_transforms.push_back(transform);
     }
     sphere->SetInstanceTransforms(instance_transforms);
 
     points_ = sphere;
-    actors.push_back(points_);
+    // actors.push_back(points_);
 }
 
 void Cloth::Init()
@@ -208,6 +210,7 @@ void Cloth::Init()
 void Cloth::Update()
 {
     cloth_.Update();
+
     auto mesh = dynamic_pointer_cast<MeshTBN>(meshes_[0]);
     auto &vertices = mesh->GetVertices();
     for (uint32_t i = 0; i < vertices.size(); ++i)
@@ -235,7 +238,8 @@ void Cloth::InitPhysics()
 
         auto particle = make_shared<Particle>(ToEigen(translation));
         particle->mass_inv_ = 1.f / 0.001f;
-        if (i == 0 || i == 9 || i == 90 || i == 99)
+        // if (i == 0 || i == 9 || i == 90 || i == 99)
+        if (i == 0 || i == 9 )
         {
             particle->mass_inv_ = 0.f;
         }
