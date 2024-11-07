@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tools/Singleton.hpp"
 #include "Scene.hpp"
 
 #include <spdlog/spdlog.h>

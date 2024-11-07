@@ -17,6 +17,8 @@
 #include "Shadow/Shadow.hpp"
 #include "render/Shadow/CascadedShadowMap.hpp"
 
+#include "tools/Singleton.hpp"
+
 struct UBOCamera
 {
     glm::mat4 proj = glm::mat4(1.0f);
@@ -32,11 +34,8 @@ struct UBOEnviroment
 class Render
 {
   public:
-    static Render &GetInstance()
-    {
-        static Render instance;
-        return instance;
-    }
+    static Render &GetInstance();
+
     ~Render();
     void Init();
     void Draw(const std::vector<std::shared_ptr<IPrimitive>> &primitives);

@@ -5,7 +5,7 @@
 #include "glm/fwd.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/vector_angle.hpp"
-#include "physics/Math.hpp"
+#include "math/Math.hpp"
 #include "physics/Particle.hpp"
 #include "physics/PhysicsSystem.hpp"
 #include "render/BasicGeometry/Cube.hpp"
@@ -24,6 +24,7 @@
 #include <unordered_set>
 
 using namespace std;
+using namespace math;
 
 std::ostream &operator<<(std::ostream &os, const Edge &edge)
 {

@@ -1,6 +1,6 @@
 #include "Spring.hpp"
 #include "Eigen/Core"
-#include "Math.hpp"
+#include "math/Math.hpp"
 #include "glm/geometric.hpp"
 #include "physics/Particle.hpp"
 #include <cassert>
@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace Eigen;
+using namespace math;
 
 Spring::Spring(const std::shared_ptr<Particle> &particle0, const std::shared_ptr<Particle> &particle1_, float stiffness)
     : particle0_(particle0), particle1_(particle1_), stiffness_(stiffness)

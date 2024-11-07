@@ -1,5 +1,6 @@
 #pragma once
 
+#include "physics/Particle.hpp"
 #include <Eigen/Eigen>
 
 namespace physics
@@ -22,4 +23,15 @@ namespace physics
 std::optional<float> CCDPointTriangle(Eigen::Vector3f const &x0, Eigen::Vector3f const &x1, Eigen::Vector3f const &x2,
                                       Eigen::Vector3f const &x3, Eigen::Vector3f const &v0, Eigen::Vector3f const &v1,
                                       Eigen::Vector3f const &v2, Eigen::Vector3f const &v3);
+
+std::optional<std::pair<float, std::array<float, 2>>> CCDEdgeEdge(Eigen::Vector3f const &x0, Eigen::Vector3f const &x1, Eigen::Vector3f const &x2,
+                                 Eigen::Vector3f const &x3, Eigen::Vector3f const &v0, Eigen::Vector3f const &v1,
+                                 Eigen::Vector3f const &v2, Eigen::Vector3f const &v3);
+
+std::optional<float> FindCollisionTime(Eigen::Vector3f const &x0, Eigen::Vector3f const &x1, Eigen::Vector3f const &x2,
+                                       Eigen::Vector3f const &x3, Eigen::Vector3f const &v0, Eigen::Vector3f const &v1,
+                                       Eigen::Vector3f const &v2, Eigen::Vector3f const &v3);
+
+std::optional<float> CCDTriangleTriangle(Particle &p0, Particle &p1, Particle &p2, Particle &p3, Particle &p4,
+                                         Particle &p5, float dt);
 } // namespace physics

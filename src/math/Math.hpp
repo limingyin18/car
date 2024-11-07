@@ -1,10 +1,12 @@
 #pragma once
 
-#include <cmath>
-
 #include <Eigen/Eigen>
 #include <glm/glm.hpp>
 
+#include <cmath>
+
+namespace math
+{
 constexpr float EPS = 1e-6;
 
 inline bool IsZero(float value)
@@ -21,3 +23,4 @@ inline Eigen::Vector3f ToEigen(const glm::vec3 &v)
 {
     return {v.x, v.y, v.z};
 }
+} // namespace math

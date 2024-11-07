@@ -92,8 +92,15 @@ void message_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GL
 }
 } // namespace
 
+Render &Render::GetInstance()
+{
+    static Render instance;
+    return instance;
+}
+
 Render::Render()
 {
+    spdlog::debug("render construct");
 }
 
 Render::~Render()

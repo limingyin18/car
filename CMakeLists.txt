@@ -62,6 +62,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
 	-DGLM_ENABLE_EXPERIMENTAL
+    -DDLL_EXPORT
 )
 
 # app

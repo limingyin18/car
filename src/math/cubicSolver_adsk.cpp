@@ -11,7 +11,7 @@
 //+
 #include "cubicSolver_adsk.h"
 
-#include <math.h>
+#include <cmath>
 
 EtValue sMachineTolerance;
 

@@ -45,7 +45,8 @@ void renderQuad()
 
 void Brdf::Init(uint32_t width, uint32_t height)
 {
-    shader_ = Render::GetInstance().GetShadersMap()["brdf"];
+    auto &shaders_map = Render::GetInstance().GetShadersMap();
+    shader_ = shaders_map["brdf"];
     width_ = width;
     height_ = height;
 

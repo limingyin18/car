@@ -5,7 +5,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include "glm/gtx/string_cast.hpp"
-#include "physics/Math.hpp"
+#include "math/Math.hpp"
 #include "physics/Particle.hpp"
 #include "render/BasicGeometry/Plane.hpp"
 #include "render/BasicGeometry/Sphere.hpp"
@@ -19,6 +19,8 @@
 #include <memory>
 
 using namespace std;
+using namespace math;
+
 
 void SceneClothSphere::Init()
 {

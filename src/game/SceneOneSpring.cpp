@@ -10,10 +10,11 @@
 
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include "physics/Math.hpp"
+#include "math/Math.hpp"
 
 using namespace std;
 using namespace Eigen;
+using namespace math;
 
 void SceneOneSpring::Init()
 {
