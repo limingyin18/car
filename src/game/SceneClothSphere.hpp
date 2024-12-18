@@ -9,6 +9,7 @@ class SceneClothSphere : public Scene
   public:
     void Init() override;
     void Update() override;
+    void UpdatePhysics() override;
 
   private:
     void InitCloth();

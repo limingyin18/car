@@ -1,36 +1,22 @@
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
-
-#include "App.hpp"
+#include "game/Game.hpp"
 
 using namespace std;
 
-void clear_log_file(const std::string &filename)
-{
-    std::ofstream ofs(filename, std::ofstream::out | std::ofstream::trunc);
-    ofs.close();
-}
+std::shared_ptr<spdlog::logger> logger;
+void InitLOG(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
-    // std::shared_ptr<spdlog::logger> logger = spdlog::basic_logger_mt("spdlog", "cloth_simulation.log");
-    // spdlog::set_default_logger(logger);
-    // // Clear the log file
-    // clear_log_file("cloth_simulation.log");
-
-#ifndef NDEBUG
-    spdlog::default_logger()->set_level(spdlog::level::debug);
-#endif
-
-    spdlog::info("========== app start ==========");
+    InitLOG(argc, argv);
 
     try
     {
-        App app;
+        Game &app = Game::GetInstance();
 
         app.Init();
 
@@ -41,8 +27,34 @@ int main(int argc, char **argv)
     catch (const exception &e)
     {
         spdlog::error(e.what());
+        spdlog::drop_all();
         return EXIT_FAILURE;
     }
 
+    // spdlog::drop_all();
     return EXIT_SUCCESS;
+}
+
+void InitLOG(int argc, char **argv)
+{
+    if (argc > 1 && string(argv[1]) == "log")
+    {
+        string filename_log = "cloth_simulation.log";
+        logger = spdlog::basic_logger_mt("spdlog", filename_log);
+        spdlog::set_default_logger(logger);
+
+        std::ofstream ofs(filename_log, std::ofstream::out | std::ofstream::trunc);
+        ofs.close();
+    }
+    if (argc > 2 && string(argv[2]) == "debug")
+    {
+        spdlog::default_logger()->set_level(spdlog::level::debug);
+    }
+    else
+    {
+        spdlog::default_logger()->set_level(spdlog::level::debug);
+#ifdef NDEBUG
+        spdlog::default_logger()->set_level(spdlog::level::info);
+#endif
+    }
 }

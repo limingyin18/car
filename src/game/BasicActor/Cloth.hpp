@@ -18,6 +18,7 @@ class Edge
     uint32_t vertex_id_end_;
 
     friend std::ostream &operator<<(std::ostream &os, const Edge &edge);
+    bool operator<(const Edge &rhs) const;
 };
 
 class Triple
@@ -54,6 +55,7 @@ class Cloth : public Actor
 
     void Init() override;
     void Update() override;
+    void UpdatePhysics() override;
 
     void GeneratePoints();
     void GenerateSegments();

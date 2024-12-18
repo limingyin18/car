@@ -105,6 +105,8 @@ Render::Render()
 
 Render::~Render()
 {
+    spdlog::debug("render destruct");
+
     for (auto &shader : shaders_map_)
     {
         glDeleteProgram(shader.second->ID);
@@ -119,10 +121,8 @@ Render::~Render()
 
     // glDeleteFramebuffers(1, &multisampled_framebuffer_);
     glDeleteTextures(1, &multisampled_color_buffer_);
-    glFinish();
+    // glFinish();
     // glDeleteRenderbuffers(1, &multisampled_depth_buffer_);
-
-    spdlog::debug("render destruct");
 }
 
 void Render::LoadShaders()
@@ -288,7 +288,7 @@ void Render::Draw(const std::vector<std::shared_ptr<IPrimitive>> &primitives)
             glm::mat4 proj = camera_->GetProj();
             glm::mat4 mvp = proj * view;
             glm::vec3 screen_pos = glm::project(translation, view, proj, glm::vec4(0, 0, width_, height_));
-            offset_ = glm::vec3(mouse_pos_x, mouse_pos_y, screen_pos.z) - screen_pos;
+            offset_ = glm::vec3(mouse_pos_x, height_ -1 - mouse_pos_y, screen_pos.z) - screen_pos;
 
             picking_->GetShader()->setInt("actorID", i);
             auto shader = primitive->GetShader();

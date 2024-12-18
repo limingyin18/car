@@ -1,30 +1,45 @@
 #pragma once
 
-#include "tools/Singleton.hpp"
 #include "Scene.hpp"
-
+#include <cstdint>
 #include <spdlog/spdlog.h>
+#include <string>
 #include <unordered_map>
 
 class IActor;
+class SDL_Window;
+union SDL_Event;
 
 class Game
 {
+  private:
+    std::string title_ = "app";
+    uint32_t width_ = 1280;
+    uint32_t height_ = 960;
+    std::shared_ptr<SDL_Window> window_ = nullptr;
+
+    std::unordered_map<std::string, std::function<void()>> scene_map_init_;
+    std::unique_ptr<Scene> scene_;
+
+    void InitWSI();
+    void InitIMGUI();
+    void DrawUI();
+
+    void ProcessInput(SDL_Event *event);
+
   public:
-    static Game &GetInstance()
-    {
-        static Game instance;
-        return instance;
-    }
+    static Game &GetInstance();
 
     void Init();
 
-    void Update()
+    void Run();
+
+    void Destroy()
     {
-        scene_->Update();
+        spdlog::debug("game destroy");
     }
 
-    void SwitchScene(std::string scene_name);
+    void SwitchScene(std::string const&scene_name);
 
     [[nodiscard]] std::vector<std::shared_ptr<IActor>> &GetActors() const
     {
@@ -38,28 +53,16 @@ class Game
 
     ~Game()
     {
-        spdlog::debug("Game destruct");
+        spdlog::debug("game destruct");
     };
 
     Game(const Game &) = delete;
+    Game &operator=(const Game &) = delete;
+    Game(Game &&) = delete;
+    Game &operator=(Game &&) = delete;
 
   private:
     Game();
 
-    void InitScene();
-    void InitSceneOneSpring();
-    void InitSceneCloth();
-    void InitSceneClothSphere();
-    std::unordered_map<std::string, std::function<void()>> scene_map_init_;
-
-    void InitBasicGeometry();
-    void InitHouse();
-    void InitShields();
-    void InitArrows();
-    void InitCubes();
-    void InitPlane();
-    void InitOcean();
-    void InitCloth();
-
-    std::unique_ptr<Scene> scene_;
+    bool physics_simulation_ = false;
 };

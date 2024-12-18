@@ -28,8 +28,10 @@ class IMesh
     [[nodiscard]] virtual uint32_t GetIndicesCount() = 0;
     [[nodiscard]] virtual std::vector<Texture> &GetTextures() = 0;
 
+
     virtual void SetupBuffer() = 0;
     virtual void SetupVAO() = 0;
 
     virtual void ReComputeNormal() = 0;
+    virtual void UpdateVBO() = 0;
 };

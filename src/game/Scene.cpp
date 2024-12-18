@@ -30,6 +30,14 @@ void Scene::Update()
     }
 }
 
+void Scene::UpdatePhysics()
+{
+    for (auto &actor : actors_)
+    {
+        actor->UpdatePhysics();
+    }
+}
+
 std::vector<std::shared_ptr<IPrimitive>> Scene::GetPrimitives() const
 {
     std::vector<std::shared_ptr<IPrimitive>> primitives;

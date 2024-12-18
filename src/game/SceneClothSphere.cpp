@@ -1,18 +1,21 @@
 #include "SceneClothSphere.hpp"
 
 #include "BasicActor/Cloth.hpp"
+#include "game/Scene.hpp"
 #include "glm/ext/matrix_projection.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "math/Math.hpp"
 #include "physics/Particle.hpp"
+#include "physics/collision/CCD.hpp"
 #include "render/BasicGeometry/Plane.hpp"
 #include "render/BasicGeometry/Sphere.hpp"
 #include "render/Material/Material.hpp"
 #include "render/Mesh/Mesh.hpp"
 #include "render/Mesh/Vertex.hpp"
 #include "render/Render.hpp"
+#include "tools/Tool.hpp"
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include <cstddef>
@@ -20,7 +23,6 @@
 
 using namespace std;
 using namespace math;
-
 
 void SceneClothSphere::Init()
 {
@@ -38,7 +40,7 @@ void SceneClothSphere::InitCloth()
     auto plane = make_shared<Plane>();
     plane->SetDynamic();
 
-    plane->Init(10, 10.f);
+    plane->Init(3, 3.f);
     auto &vertices = plane->GetVertices();
     for (uint32_t i = 0; i < vertices.size(); ++i)
     {
@@ -89,7 +91,7 @@ void SceneClothSphere::InitSphere()
 
     auto mesh = make_shared<Sphere>();
     mesh->SetDynamic();
-    mesh->Init(36u, 18u, 2.f);
+    mesh->Init(10u, 10u, 2.f);
     sphere_->AddMesh(mesh);
 
     auto transform = glm::mat4(1.f);
@@ -102,6 +104,11 @@ void SceneClothSphere::Update()
 {
     Scene::Update();
     UpdateSphere();
+}
+
+void SceneClothSphere::UpdatePhysics()
+{
+    Scene::UpdatePhysics();
     CollideClothSphere();
 }
 
@@ -120,17 +127,69 @@ void SceneClothSphere::CollideClothSphere()
 
     float radius = 2.f;
 
+    // ccd
+    {
+        auto mesh = dynamic_pointer_cast<MeshTBN>(cloth_->GetMeshes()[0]);
+        auto &vertices = mesh->GetVertices();
+        auto &indices = mesh->GetIndices();
+
+        auto mesh_sphere = dynamic_pointer_cast<Sphere>(sphere_->GetMeshes()[0]);
+        auto &vertices_sphere = mesh_sphere->GetVertices();
+        auto &indices_sphere = mesh_sphere->GetIndices();
+
+        for (uint32_t i = 0; i < indices.size(); i += 3)
+        {
+            uint32_t index0 = indices[i + 0];
+            uint32_t index1 = indices[i + 1];
+            uint32_t index2 = indices[i + 2];
+            auto &p0 = *cloth_->cloth_.particles_[index0];
+            auto &p1 = *cloth_->cloth_.particles_[index1];
+            auto &p2 = *cloth_->cloth_.particles_[index2];
+
+            for (uint32_t j = 0; j < indices_sphere.size(); j += 3)
+            {
+                uint32_t index0_sphere = indices_sphere[j + 0];
+                uint32_t index1_sphere = indices_sphere[j + 1];
+                uint32_t index2_sphere = indices_sphere[j + 2];
+                auto p3 =
+                    Particle(ToEigen(vertices_sphere[index0_sphere].position_), Eigen::Vector3f(0.f, 0.f, 0.f), 0.f);
+                auto p4 =
+                    Particle(ToEigen(vertices_sphere[index1_sphere].position_), Eigen::Vector3f(0.f, 0.f, 0.f), 0.f);
+                auto p5 =
+                    Particle(ToEigen(vertices_sphere[index2_sphere].position_), Eigen::Vector3f(0.f, 0.f, 0.f), 0.f);
+                auto t = physics::CCDTriangleTriangle(p0, p1, p2, p3, p4, p5, 0.016f);
+                if (t.has_value())
+                {
+                    spdlog::info("collision time: {}", t.value());
+                }
+            }
+        }
+    }
+
     for (auto &particle : particles)
     {
-        Eigen::Vector3f dir = particle->pos_ - center;
-        float dist = dir.norm();
-        if (dist < radius)
-        {
-            dir.normalize();
-            Eigen::Vector3f A = center + radius * dir;
-            particle->velocity_ = (A - particle->pos_) / 0.016f;
-            // particle->mass_inv_ = 0.f;
-        }
+        particle->pos_ += particle->velocity_ * 0.016f;
+    }
+
+    // sdf
+    {
+        // for (auto &particle : particles)
+        // {
+        //     Eigen::Vector3f dir = particle->pos_ - center;
+        //     float dist = dir.norm();
+        //     if (dist < radius)
+        //     {
+        //         int a = 1;
+        //         spdlog::error("collision");
+        //         spdlog::debug("{}", Tool::EigenToString(particle->pos_));
+        //         spdlog::debug("{}", Tool::EigenToString(particle->velocity_));
+        //         throw std::runtime_error("collision");
+        //         // dir.normalize();
+        //         // Eigen::Vector3f A = center + radius * dir;
+        //         // particle->velocity_ = (A - particle->pos_) / 0.016f;
+        //         // particle->mass_inv_ = 0.f;
+        //     }
+        // }
     }
 
     auto meshes = cloth_->GetMeshes();
@@ -171,7 +230,7 @@ void SceneClothSphere::UpdateSphere()
         mouse.z = screen_pos.z;
 
         mouse[0] = 2 * mouse[0] / camera->GetWidth() - 1.f;
-        mouse[1] = 1-2 * mouse[1] / camera->GetHeight();
+        mouse[1] = 1 - 2 * mouse[1] / camera->GetHeight();
         mouse[2] = 2 * mouse[2] - 1.f;
         glm::vec4 mouse_h = glm::vec4(mouse, 1);
         glm::vec4 model_dx = mvp_inverse * mouse_h;

@@ -12,6 +12,8 @@ class Cloth
   public:
     void Init();
     void Update();
+    void UpdateImplicit();
+    void UpdateImplicitOpimize();
 
     void AddParticle(const std::shared_ptr<Particle> &particle);
     void AddSpring(int i, int j, const std::shared_ptr<Particle> &particle0, const std::shared_ptr<Particle> &particle1,

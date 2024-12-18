@@ -12,7 +12,8 @@
 void Primitive::Draw()
 {
     shader_->use();
-    shader_->setMat4("model", transform_ * mesh_->GetModel());
+    // shader_->setMat4("model", transform_ * mesh_->GetModel());
+    shader_->setMat4("model", transform_);
 
     auto &textures = mesh_->GetTextures();
     for (size_t i = 0; i < textures.size(); ++i)

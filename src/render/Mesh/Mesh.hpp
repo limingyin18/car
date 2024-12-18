@@ -86,6 +86,7 @@ class Mesh : public IMesh
     void SetDynamic();
 
     void ReComputeNormal() override;
+    void UpdateVBO() override;
 
   protected:
     std::vector<Vertex> vertices_;

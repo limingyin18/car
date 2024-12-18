@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Eigen/Core"
 #include <glm/glm.hpp>
 
 #include <fstream>
@@ -10,6 +11,7 @@ class Tool
 {
   public:
     static void PrintGLM(const std::string &name, const glm::mat4 &mat);
+    static std::string EigenToString(const Eigen::MatrixXf &mat);
     static uint32_t LoadTexture(const std::string &path);
     static uint32_t LoadTextureHDR(const std::string &path);
 

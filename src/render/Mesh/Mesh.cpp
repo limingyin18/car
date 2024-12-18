@@ -100,3 +100,8 @@ void Mesh::ReComputeNormal()
     for (auto &d : vertices_)
         d.normal_ = glm::normalize(d.normal_);
 }
+
+void Mesh::UpdateVBO()
+{
+    glNamedBufferSubData(vbo_, 0, vertices_.size() * sizeof(Vertex), vertices_.data());
+}

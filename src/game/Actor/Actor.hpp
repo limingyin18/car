@@ -22,6 +22,7 @@ class Actor : public IActor
     virtual ~Actor();
     void Init() override;
     void Update() override {};
+    void UpdatePhysics() override {};
     void Destroy() override {};
 
     void SetModelPath(const std::string &model_path)

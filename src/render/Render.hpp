@@ -94,6 +94,10 @@ class Render
     {
         is_picking_ = is_picking;
     }
+    void SetSelected(bool is_selected)
+    {
+        is_selected_ = is_selected;
+    }
 
     bool GetIsSelected()
     {

@@ -19,7 +19,7 @@ class MeshTBN : public Mesh
         return vertices_;
     }
 
-    void UpdateVBO();
+    void UpdateVBO() override;
 
     void ReComputeNormal() override;
 

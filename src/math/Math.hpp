@@ -23,4 +23,6 @@ inline Eigen::Vector3f ToEigen(const glm::vec3 &v)
 {
     return {v.x, v.y, v.z};
 }
+
+int cubic_solver(float a, float b, float c, float d, float *roots);
 } // namespace math

@@ -20,9 +20,20 @@ void ActorSkeletal::Init()
 
 void ActorSkeletal::Update()
 {
-    animator_->UpdateAnimation(0.01f);
+    if (!is_animated_ || !animator_)
+    {
+        shader_->use();
+        for (size_t i = 0; i < 100; i++)
+        {
+            auto transform = glm::mat4(1.0f);
+            shader_->setMat4("finalBonesMatrices[" + to_string(i) + "]", transform);
+        }
+        return;
+    }
+    animator_->UpdateAnimation(0.016f);
 
     auto transforms = animator_->GetFinalBoneMatrices();
+
     shader_->use();
     for (size_t i = 0; i < transforms.size(); i++)
     {

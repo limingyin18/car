@@ -7,6 +7,7 @@ class Particle;
 namespace physics
 {
 void ResponsePointTriangle(Particle &p, Particle &pA, Particle &pB, Particle &pC, float dt);
+void ResponsePointTriangleCheck(Particle &p, Particle &pA, Particle &pB, Particle &pC, float dt);
 
 float ImpulsePointTriangle(float m0_inv, float m1_inv, float m2_inv, float m3_inv, float w1, float w2, float w3,
                            float Vrn);
@@ -20,4 +21,9 @@ void ApplyImpulsionEdgeEdge(Particle &pA, Particle &pB, Particle &pC, Particle &
                             float b, float I);
 
 void ResponseEdgeEdge(Particle &pA, Particle &pB, Particle &pC, Particle &pD, float dt, float a, float b);
+
+void RepulsionPointTriangle(Particle &p, Particle &pA, Particle &pB, Particle &pC, float dt);
+float RepulsionImpulse(float m0_inv, float Vrn, float d, float dt);
+
+void RepulsionEdgeEdge(Particle &pA, Particle &pB, Particle &pC, Particle &pD, float dt, float a, float b);
 } // namespace physics

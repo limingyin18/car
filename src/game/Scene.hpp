@@ -5,14 +5,19 @@
 
 class IActor;
 class Actor;
+class ActorSkeletal;
 class IPrimitive;
 class Skybox;
+union SDL_Event;
 
 class Scene
 {
   public:
     virtual void Init();
     virtual void Update();
+    virtual void UpdatePhysics();
+
+    virtual void ProcessInput(SDL_Event *event) {};
 
     [[nodiscard]] std::vector<std::shared_ptr<IActor>> &GetActors()
     {

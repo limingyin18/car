@@ -1,6 +1,7 @@
 #include "Tool.hpp"
 
 #include "glad/glad.h"
+#include <sstream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -86,4 +87,11 @@ void Tool::PrintGLM(const std::string &name, const glm::mat4 &mat)
     {
         spdlog::info("{:f} {:f} {:f} {:f}", mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
     }
+}
+
+std::string Tool::EigenToString(const Eigen::MatrixXf &mat)
+{
+    std::stringstream ss;
+    ss << mat;
+    return ss.str();
 }

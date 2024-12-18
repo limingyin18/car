@@ -32,6 +32,24 @@ std::ostream &operator<<(std::ostream &os, const Edge &edge)
     return os;
 }
 
+bool Edge::operator<(const Edge &rhs) const
+{
+    if (this->vertex_id_start_ < rhs.vertex_id_start_)
+    {
+        return true;
+    }
+    else if(this->vertex_id_start_ == rhs.vertex_id_start_)
+    {
+        if(this->vertex_id_end_ < rhs.vertex_id_end_)
+        {
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
 Triple::Triple(uint32_t vertex_id_start, uint32_t vertex_id_end, uint32_t triangle_id)
     : vertex_id_start_(vertex_id_start), vertex_id_end_(vertex_id_end), triangle_id_(triangle_id)
 {
@@ -208,10 +226,13 @@ void Cloth::Init()
     Actor::Init();
 }
 
-void Cloth::Update()
+void Cloth::UpdatePhysics()
 {
     cloth_.Update();
+}
 
+void Cloth::Update()
+{
     auto mesh = dynamic_pointer_cast<MeshTBN>(meshes_[0]);
     auto &vertices = mesh->GetVertices();
     for (uint32_t i = 0; i < vertices.size(); ++i)
@@ -240,7 +261,7 @@ void Cloth::InitPhysics()
         auto particle = make_shared<Particle>(ToEigen(translation));
         particle->mass_inv_ = 1.f / 0.001f;
         // if (i == 0 || i == 9 || i == 90 || i == 99)
-        if (i == 0 || i == 9 )
+        if (i == 0 || i == 2)
         {
             particle->mass_inv_ = 0.f;
         }

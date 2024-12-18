@@ -34,4 +34,7 @@ std::optional<float> FindCollisionTime(Eigen::Vector3f const &x0, Eigen::Vector3
 
 std::optional<float> CCDTriangleTriangle(Particle &p0, Particle &p1, Particle &p2, Particle &p3, Particle &p4,
                                          Particle &p5, float dt);
+
+std::optional<float> CCDTriangleTriangleCheck(Particle &p0, Particle &p1, Particle &p2, Particle &p3, Particle &p4,
+                                         Particle &p5, float dt);
 } // namespace physics
